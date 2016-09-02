@@ -7,22 +7,25 @@ import scalajs.js.annotation.JSExport
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import autowire._
 import scalapp.model._
+import upickle.{ default => upick }
+import org.scalajs.dom.raw.HTMLUListElement
 
-object Ajaxer extends autowire.Client[String, upickle.Reader, upickle.Writer] {
+object Ajaxer extends autowire.Client[String, upick.Reader, upick.Writer] {
   override def doCall(req: Request) = {
     dom.ext.Ajax.post(
-      url = "/ajax/" + req.path.mkString("/"),
-      data = upickle.write(req.args)).map(_.responseText)
+      url = "/api/" + req.path.mkString("/"),
+      data = upick.write(req.args)).map(_.responseText)
   }
 
-  def read[Result: upickle.Reader](p: String) = upickle.read[Result](p)
-  def write[Result: upickle.Writer](r: Result) = upickle.write(r)
+  def read[Result: upick.Reader](p: String) = upick.read[Result](p)
+  def write[Result: upick.Writer](r: Result) = upick.write(r)
 }
 
 @JSExport
 object Client {
   @JSExport
   def main(container: html.Div) = {
+    val catList = ul.render
     val inputBox = input.render
     val outputBox = ul.render
     //val category = if (inputBox.value.isEmpty()) None else Some(inputBox.value)
@@ -60,10 +63,13 @@ object Client {
     //    }
     //    inputBox.onkeyup = (e: dom.Event) => update()
     //    update()
-    //    container.appendChild(
-    //      div(
-    //        h1("File Search"),
-    //        inputBox,
-    //        outputBox).render)
+    def makeCatList = Ajaxer[Api].categories().call().map { cs =>
+      val htmlUl = ul(
+        cs.map(li(_)))
+      htmlUl.render
+    }
+    makeCatList.foreach { ls =>
+      container.appendChild(ls)
+    }
   }
 }

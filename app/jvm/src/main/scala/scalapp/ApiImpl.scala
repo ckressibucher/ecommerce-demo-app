@@ -1,44 +1,58 @@
 package scalapp
 
 import scalapp.model._
+import akka.actor.ActorRef
+import akka.pattern.ask
+import ApiHandler._
+import akka.util.Timeout
+import scala.concurrent.duration._
+import com.sksamuel.scapegoat.inspections.unsafe.AsInstanceOf
+import scala.util.Success
+import scala.concurrent.{ ExecutionContext, Future }
+import scalapp.CartActor.DeleteProduct
 
-object ApiImpl extends Api {
-
-  val dummyCategories = List("Shoes", "Bags & Luggage", "Glasses", "Jewelry")
-
-  val dummyProducts = List(
-    Product("black shoes", 8900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams000a_2.jpg", "Shoes"),
-    Product("Suede loafer, navy", 11900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams010a_2.jpg", "Shoes"),
-    Product("Wingtip, Cognac", 9900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams005a_2.jpg", "Shoes"),
-    Product("Isla Handbag", 18900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/b/abl000_4.jpg", "Bags & Luggage"),
-    Product("Houston travel wallet", 5900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/b/abl004a_1.jpg", "Bags & Luggage"),
-    Product("Retro glasses", 8900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/ace002a_1.jpg", "Glasses"),
-    Product("Blue horizon bracelets", 7900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/acj006_2.jpg", "Jewelry"),
-    Product("Silver desert necklace", 18900l, "http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/acj000_2.jpg", "Jewelry"));
+/** @param handler Reference to the actor handling the actual requests. Must be of type `ApiHandler`.
+  */
+class ApiImpl(val handler: ActorRef)(implicit val execCxt: ExecutionContext) extends Api {
+  implicit val timeout = Timeout(3.seconds)
 
   /** Returns all categories
+    *
+    * Important: must have parenthesis for autowire to work!
     */
-  def categories(): Seq[Category] = dummyCategories
+  def categories() = (handler ? GetCategories).map(_.asInstanceOf[Seq[Category]])
 
   /** Returns a list of products by category (or all products if no category given)
     */
-  def products(category: Option[Category]): Seq[Product] =
-    category match {
-      case Some(c) => dummyProducts filter { _.cat == c }
-      case None    => dummyProducts
-    }
+  def products(category: Option[Category]) = (handler ? GetProducts(category)).map(_.asInstanceOf[Seq[Product]])
 
   /** Returns `Some` error message in case of failure, `None` in case of success.
-    * TODO
     */
-  def addToCart(productName: String, qty: Int) = None
+  def addToCart(productName: String, qty: Int) = {
+    for {
+      c <- cartActor
+      p <- handler.ask(GetProduct(productName))
+      result <- p match {
+        case Some(product: Product) => c.ask(CartActor.AddToCart(product, qty))
+        case None                   => Future.successful(errProductDoesNotExist(productName))
+      }
+    } yield result.asInstanceOf[ResultStatus]
+  }
 
-  /** TODO
-    */
-  def deleteFromCart(productName: String) = None
+  def deleteFromCart(productName: String) = {
+    for {
+      c <- cartActor
+      p <- handler.ask(GetProduct(productName))
+      result <- p match {
+        case Some(product: Product) => c.ask(CartActor.DeleteProduct(product))
+        case None                   => Future.successful(errProductDoesNotExist(productName))
+      }
+    } yield result.asInstanceOf[ResultStatus]
+  }
 
-  /** TODO
-    */
-  def showCart() = List[CartItem]()
+  def showCart() = {
+    cartActor.flatMap(_ ? CartActor.GetCartCopy).map(_.asInstanceOf[CartData])
+  }
 
+  def cartActor: Future[ActorRef] = (handler ? GetCartActor("some-session-id-TODO")).map(_.asInstanceOf[ActorRef])
 }
