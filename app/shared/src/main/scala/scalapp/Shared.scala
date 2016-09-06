@@ -2,6 +2,7 @@ package scalapp
 
 import scalapp.model._
 import scala.concurrent.Future
+import scalapp.model.CartData
 
 case class FileData(name: String, size: Long)
 
@@ -18,9 +19,9 @@ trait Api {
 
   /** Returns `Some` error message in case of failure, `None` in case of success.
     */
-  def addToCart(productName: String, qty: Int): Future[ResultStatus]
+  def addToCart(sessId: String, productName: String, qty: Int): Future[ResultStatus]
 
-  def deleteFromCart(productName: String): Future[ResultStatus]
+  def deleteFromCart(sessId: String, productName: String): Future[ResultStatus]
 
-  def showCart(): Future[CartData]
+  def showCart(sessId: String): Future[CartData]
 }

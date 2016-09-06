@@ -2,7 +2,7 @@ package scalapp
 
 package object model {
 
-  type Category = String
+  case class Category(name: String) extends AnyVal
 
   /** `Some` error message or `None` on success.
     */
@@ -12,6 +12,18 @@ package object model {
     */
   type CartItem = (Product, Int)
 
-  case class Product(name: String, price: Long, img: String, cat: Category)
+  case class ProductName(name: String) extends AnyVal
+
+  case class Price(cents: Long) extends AnyVal {
+    def format(dec: String = ".", prefix: String = "", suffix: String = " Euro"): String = {
+      val main = cents / 100
+      val cs = cents % 100
+      List(prefix, main, dec, cs, suffix).mkString("")
+    }
+  }
+
+  case class ImgPath(url: String) extends AnyVal
+
+  case class Product(name: ProductName, price: Price, img: ImgPath, cat: Category)
 
 }

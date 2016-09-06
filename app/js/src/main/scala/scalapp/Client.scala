@@ -4,22 +4,13 @@ import scalatags.JsDom.all._
 import org.scalajs.dom
 import dom.html
 import scalajs.js.annotation.JSExport
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import autowire._
 import scalapp.model._
 import upickle.{ default => upick }
 import org.scalajs.dom.raw.HTMLUListElement
-
-object Ajaxer extends autowire.Client[String, upick.Reader, upick.Writer] {
-  override def doCall(req: Request) = {
-    dom.ext.Ajax.post(
-      url = "/api/" + req.path.mkString("/"),
-      data = upick.write(req.args)).map(_.responseText)
-  }
-
-  def read[Result: upick.Reader](p: String) = upick.read[Result](p)
-  def write[Result: upick.Writer](r: Result) = upick.write(r)
-}
+import scala.concurrent.Future
+import scalapp.client.AjaxService
+import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 @JSExport
 object Client {
@@ -63,9 +54,9 @@ object Client {
     //    }
     //    inputBox.onkeyup = (e: dom.Event) => update()
     //    update()
-    def makeCatList = Ajaxer[Api].categories().call().map { cs =>
+    def makeCatList = AjaxService[Api].categories().call().map { cs: Seq[Category] =>
       val htmlUl = ul(
-        cs.map(li(_)))
+        cs.map { s: Category => li(s.toString()) })
       htmlUl.render
     }
     makeCatList.foreach { ls =>

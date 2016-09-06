@@ -1,15 +1,16 @@
 package scalapp
 
 import scalapp.model._
-import akka.actor.Actor
-import akka.actor.Props
+import akka.actor.{ Actor, Props, ActorRef }
 
 class ApiRouter extends Actor {
   import ApiRouter._
   implicit val execContext = context.system.dispatcher
 
-  val apiHandler = context.actorOf(Props(classOf[ApiHandler]))
-  val apiImpl = new ApiImpl(apiHandler)
+  // The cart factory is responsible to manage one cart per user session.
+  val cartFactory = context.actorOf(Props(classOf[CartFactory]))
+
+  val apiImpl = new ApiImpl(cartFactory)
 
   def receive = {
     case Request(segments, args) => {

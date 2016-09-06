@@ -1,6 +1,4 @@
-package scalapp
-
-import scalapp.model._
+package scalapp.model
 
 case class CartData(productItems: List[CartItem]) {
 

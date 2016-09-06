@@ -16,7 +16,17 @@ val app = crossProject.settings(
     "-feature"
   )
 ).jsSettings(
-  libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0"
+  libraryDependencies ++= Seq(
+    "org.scala-js" %%% "scalajs-dom" % "0.8.0",
+    "com.github.japgolly.scalajs-react" %%% "core" % "0.11.1",
+    "com.github.japgolly.scalajs-react" %%% "extra" % "0.11.1",
+    "me.chrons" %%% "diode" % "1.0.0",
+    "me.chrons" %%% "diode-react" % "1.0.0"
+  ),
+  jsDependencies ++= Seq(
+    "org.webjars.bower" % "react" % "15.3.1" / "react-with-addons.js" minified "react-with-addons.min.js" commonJSName "React",
+    "org.webjars.bower" % "react" % "15.3.1" / "react-dom.js" minified "react-dom.min.js" dependsOn "react-with-addons.js" commonJSName "ReactDOM"
+  )
 ).jvmSettings(
   // JVM-specific settings here
   libraryDependencies ++= Seq(
