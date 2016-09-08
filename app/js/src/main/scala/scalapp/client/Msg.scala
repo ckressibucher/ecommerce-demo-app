@@ -6,7 +6,7 @@ import scalapp.model._
 
 case class SelectCategory(c: Category) extends Action
 
-case class UpdateCategories(potResult: Pot[Seq[Category]]) extends PotAction[Seq[Category], UpdateCategories] {
+case class UpdateCategories(potResult: Pot[Seq[Category]] = Pot.empty) extends PotAction[Seq[Category], UpdateCategories] {
   def next(newResult: Pot[Seq[Category]]) = UpdateCategories(newResult)
 }
 

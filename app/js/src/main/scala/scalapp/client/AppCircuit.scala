@@ -2,7 +2,7 @@ package scalapp.client
 
 import scalapp.client.{ AppModel => RootModel }
 import diode.Circuit
-import diode.react.ReactConnector
+import diode.react.{ ReactConnector, ReactConnectProxy }
 import diode._
 import diode.data.Pot
 import diode.data.PotState._
@@ -13,7 +13,7 @@ import diode.data.PotAction
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-class AppCircuit[RootModel] extends Circuit[AppModel] with ReactConnector[AppModel] {
+object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
 
   override protected def initialModel = AppModel(CategoryModel(Pot.empty, None),
     ProductModel(Pot.empty),

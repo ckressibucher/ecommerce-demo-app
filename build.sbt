@@ -40,6 +40,7 @@ lazy val appJS = app.js.settings(
 )
 
 lazy val appJVM = app.jvm.settings(
-  (resources in Compile) += (fastOptJS in (appJS, Compile)).value.data
+  (resources in Compile) += (fastOptJS in (appJS, Compile)).value.data,
+  (resources in Compile) += (packageJSDependencies in (appJS, Compile)).value
 )
 
