@@ -1,6 +1,6 @@
 package scalapp.client
 
-import scalapp.model._
+import scalapp.model.{ Product, Category }
 import diode.data.Pot
 import scalapp.model.CartData
 
@@ -10,7 +10,7 @@ case class CategoryModel(cats: Pot[Seq[Category]], cur: Option[Category])
 
 // for this simple demo app with not many products we load all
 // products at once...
-case class ProductModel(products: Pot[Seq[Product]])
+case class ProductModel(all: Pot[Seq[Product]])
 
 case class CartModel(cartData: Pot[CartData])
 

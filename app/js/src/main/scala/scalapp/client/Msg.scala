@@ -10,7 +10,7 @@ case class UpdateCategories(potResult: Pot[Seq[Category]] = Pot.empty) extends P
   def next(newResult: Pot[Seq[Category]]) = UpdateCategories(newResult)
 }
 
-case class UpdateProducts(potResult: Pot[Seq[Product]]) extends PotAction[Seq[Product], UpdateProducts] {
+case class UpdateProducts(potResult: Pot[Seq[Product]] = Pot.empty) extends PotAction[Seq[Product], UpdateProducts] {
   def next(newResult: Pot[Seq[Product]]) = UpdateProducts(newResult)
 }
 

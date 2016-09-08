@@ -12,7 +12,10 @@ object Page {
         script(src := "/app-fastopt.js"),
         link(
           rel := "stylesheet",
-          href := "https://cdn.jsdelivr.net/picnicss/6.1.4/picnic.min.css")),
+          href := "https://cdn.jsdelivr.net/picnicss/6.1.4/picnic.min.css"),
+        link(
+          rel := "stylesheet",
+          href := "/app-styles.css")),
       body(
         onload := boot,
         div(id := "contents")))

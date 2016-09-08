@@ -12,6 +12,9 @@ import scalapp.Api
 import diode.data.PotAction
 import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scalajs.js
+import scalapp.Api
+import scalapp.model.{ Product }
 
 object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
 
@@ -20,12 +23,22 @@ object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
     CartModel(Pot.empty))
 
   override protected val actionHandler = composeHandlers(
-    new CategoryHandler(zoomRW(_.categories)((m, v) => m.copy(categories = v))))
+    new CategoryHandler(zoomRW(_.categories)((m, v) => m.copy(categories = v))),
+    new ProductHandler(zoomRW(_.products)((m, v) => m.copy(products = v))
+      .zoomRW(_.all)((m, v) => m.copy(all = v))))
 
 }
 
-class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandler(modelRW) {
+class ProductHandler[M](modelRW: ModelRW[M, Pot[Seq[Product]]]) extends ActionHandler(modelRW) {
+  override def handle = {
+    case action: UpdateProducts => {
+      val updateF = action.effect(AjaxService[Api].products(None).call())(p => p)
+      action.handleWith(this, updateF)(PotAction.handler())
+    }
+  }
+}
 
+class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandler(modelRW) {
   // TODO read this
   /* http://ochrons.github.io/diode/advanced/PotActions.html */
   override def handle = {

@@ -1,6 +1,6 @@
 package scalapp
 
-import scalapp.model._
+import scalapp.model.{ Product, Category, ResultStatus }
 import scala.concurrent.Future
 import scalapp.model.CartData
 
