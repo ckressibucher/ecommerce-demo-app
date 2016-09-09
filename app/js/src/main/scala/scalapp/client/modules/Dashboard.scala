@@ -21,12 +21,14 @@ object Dashboard {
 
   val component = ReactComponentB[Props]("Dashboard")
     .render_P { props =>
-
       <.section(
         <.header(
           <.h2("Welcome to the xyz online shop!")),
-        <.aside(props.catsComponent(CategoryList(props.router, _))),
-        <.main(props.prodComponent(ProductsList(_))))
+        <.div(^.className := "flex one three-800 four-1000",
+          <.aside(^.className := "third-800 fourth-1000",
+            props.catsComponent(CategoryList(props.router, _))),
+          <.main(^.className := "two-third-800 three-fourth-1000",
+            props.prodComponent(ProductsList(_)))))
     }
     .build
 

@@ -28,8 +28,11 @@ object CategoryPage {
       <.section(
         <.header(
           <.h2("Products of category " + props.currenct.name)),
-        <.aside(props.catsComp(CategoryList(props.router, _))),
-        <.main(props.prodComp(ProductsList(_))))
+        <.div(^.className := "flex one three-800 four-1000",
+          <.aside(^.className := "third-800 fourth-1000",
+            props.catsComp(CategoryList(props.router, _))),
+          <.main(^.className := "two-third-800 three-fourth-1000",
+            props.prodComp(ProductsList(_)))))
     }
     .build
 
