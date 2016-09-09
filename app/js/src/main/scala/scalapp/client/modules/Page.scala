@@ -20,6 +20,7 @@ import scalapp.model.Category
 import scalapp.model.Product
 import scalapp.client.ReactHelper._
 import diode.Dispatcher
+import scalapp.model.CartView
 
 /** The main entry point for the "view"
   */
@@ -31,7 +32,9 @@ object Page {
 
   case class PageProps(rootModel: ModelR[_, AppModel], page: Loc, components: Components, dispatcher: Dispatcher, router: RouterCtl[Loc])
 
-  case class Components(catList: ReactConnectProxy[CategoryModel], products: ReactConnectProxy[Pot[Seq[Product]]])
+  case class Components(catList: ReactConnectProxy[CategoryModel],
+    products: ReactConnectProxy[Pot[Seq[Product]]],
+    cartView: ReactConnectProxy[Pot[CartView]])
 
   val year = (new js.Date()).getFullYear()
 
@@ -53,7 +56,7 @@ object Page {
           <.label(^.`for` := "bmenub", ^.className := "burger pseudo button", "menu"),
 
           <.div(^.className := "menu",
-            <.a("To Cart (x articlesTODO)"),
+            props.router.link(CartLoc)("To Cart"), // TODO show some main cart data here...
             <.a("Newest products"))),
         <.div(^.className := "spacer-afternav", " "),
         <.div(^.className := "breadcrumb", props.page.toString())))
@@ -72,6 +75,13 @@ object Page {
       Footer())
   }
 
+  val CartView: PageView = (props) => {
+    <.section(
+      Header(HeaderProps(props)),
+      CartPage.component(CartPage.Props(props.router, props.components.cartView, props.dispatcher)),
+      Footer())
+  }
+
   def categoryView(cur: Category): PageView = (props) => {
     val catProps = CategoryPage.Props(props.router, cur,
       props.components.catList,
@@ -87,6 +97,7 @@ object Page {
     .render_P(p => p.page match {
       case DashboardLoc   => DashboardView(p)
       case CategoryLoc(c) => categoryView(c)(p)
+      case CartLoc        => CartView(p)
       case unknown        => <.div("no page definition for this " + (unknown.toString()))
     })
     .build

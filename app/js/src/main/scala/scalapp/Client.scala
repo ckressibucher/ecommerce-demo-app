@@ -21,10 +21,10 @@ import diode.ModelR
 import diode.data.Pot
 import japgolly.scalajs.react.extra.router.RouterConfig
 import scalapp.client._
-import scalapp.client.DashboardLoc
 
 import scalapp.client.modules.Page
 import japgolly.scalajs.react.extra.router.StaticDsl.Route
+import scalapp.model.CartView
 
 @JSExport
 object Client extends js.JSApp {
@@ -46,8 +46,10 @@ object Client extends js.JSApp {
   // the react component for a list of products (using the read model above)
   val productsList: ReactConnectProxy[Pot[Seq[Product]]] = AppCircuit.connect(selectedProducts)
 
+  val cartView: ReactConnectProxy[Pot[CartView]] = AppCircuit.connect(_.cartView)
+
   // the main react components (or connect proxies)
-  val components = Page.Components(catsList, productsList)
+  val components = Page.Components(catsList, productsList, cartView)
   val dispatch = (a: diode.Action) => Callback { AppCircuit.dispatch(a) }
 
   // configure the router
@@ -64,12 +66,13 @@ object Client extends js.JSApp {
       dynamicRoute(r const page) { case p if page == p => p }
     }
     val dashboardRoute = staticToDynamicRoute(root, DashboardLoc)
+    val cartRoute = staticToDynamicRoute("#cart", CartLoc)
     val catRoute = dynamicRouteCT(
       ("#cat" / string("[^/]*"))
         .pmap(c => Some(CategoryLoc(Category(c))))((a: CategoryLoc) => a.cat.name))
 
     // now compose the rules
-    (dashboardRoute ~> commonAction | catRoute ~> commonAction)
+    (dashboardRoute ~> commonAction | catRoute ~> commonAction | cartRoute ~> commonAction)
       .notFound(redirectToPage(DashboardLoc)(Redirect.Replace))
   }
 

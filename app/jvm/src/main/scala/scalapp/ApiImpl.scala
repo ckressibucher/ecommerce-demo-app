@@ -7,7 +7,6 @@ import CartFactory._
 import akka.util.Timeout
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import com.sksamuel.scapegoat.inspections.unsafe.AsInstanceOf
 import scala.util.Success
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.Future.successful
@@ -54,8 +53,10 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
 
   def showCart(sessId: String): Future[CartView] =
     cartBySessId(sessId).flatMap { cartActor =>
-      val result: Either[String, CartView] = (cartActor ? GetCartView).asInstanceOf[Either[String, CartView]]
-      result match {
+      val resultAny = (cartActor ? GetCartView)
+      println("ok, got result")
+      val result = resultAny.asInstanceOf[Future[Either[String, CartView]]]
+      result flatMap {
         case Left(err) => Future.failed(new RuntimeException(err))
         case Right(cv) => Future.successful(cv)
       }
