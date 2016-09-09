@@ -8,8 +8,6 @@ object Page {
   val skeleton =
     html(
       head(
-        script(src := "/app-jsdeps.js"),
-        script(src := "/app-fastopt.js"),
         link(
           rel := "stylesheet",
           href := "https://cdn.jsdelivr.net/picnicss/6.1.4/picnic.min.css"),
@@ -18,5 +16,7 @@ object Page {
           href := "/app-styles.css")),
       body(
         onload := boot,
-        div(id := "contents")))
+        div(id := "contents", "Loading..."),
+        script(src := "/app-jsdeps.js"),
+        script(src := "/app-fastopt.js")))
 }
