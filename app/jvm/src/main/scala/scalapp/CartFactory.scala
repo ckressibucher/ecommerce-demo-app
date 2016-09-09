@@ -4,6 +4,8 @@ import scalapp.model._
 import akka.actor.Actor
 import akka.actor.ActorRef
 
+/** Manages cart actors
+  */
 class CartFactory extends Actor {
   import CartFactory._
 

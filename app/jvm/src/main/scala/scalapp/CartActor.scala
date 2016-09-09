@@ -10,7 +10,7 @@ object CartActor {
   sealed trait Msg
   case class AddToCart(product: Product, qty: Int) extends Msg
   case class DeleteProduct(product: Product) extends Msg
-  case object GetCartCopy extends Msg
+  case object GetCartView extends Msg
 
   def props = Props(new CartActor(CartData(List())))
 }
@@ -26,6 +26,6 @@ class CartActor(var cart: CartData) extends Actor {
     case DeleteProduct(product) =>
       cart = cart.deleteProduct(product)
       sender ! None
-    case GetCartCopy => sender ! cart.copy()
+    case GetCartView => sender ! CartService.caluclateCart(cart)
   }
 }

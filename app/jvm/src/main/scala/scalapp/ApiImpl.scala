@@ -6,11 +6,13 @@ import akka.pattern.ask
 import CartFactory._
 import akka.util.Timeout
 import scala.concurrent.duration._
+import scala.concurrent.Future
 import com.sksamuel.scapegoat.inspections.unsafe.AsInstanceOf
 import scala.util.Success
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.Future.successful
 import scalapp.CartActor.DeleteProduct
+import scalapp.CartActor.GetCartView
 
 class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) extends Api {
   import ApiImpl._
@@ -50,8 +52,14 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
       case None => successful(errProductDoesNotExist(productName))
     }
 
-  def showCart(sessId: String): Future[CartData] =
-    cartBySessId(sessId).map(_.asInstanceOf[CartData])
+  def showCart(sessId: String): Future[CartView] =
+    cartBySessId(sessId).flatMap { cartActor =>
+      val result: Either[String, CartView] = (cartActor ? GetCartView).asInstanceOf[Either[String, CartView]]
+      result match {
+        case Left(err) => Future.failed(new RuntimeException(err))
+        case Right(cv) => Future.successful(cv)
+      }
+    }
 
   def cartBySessId(id: String): Future[ActorRef] = {
     (cartFactory ? CartFactory.GetCartActor(id)).map(_.asInstanceOf[ActorRef])
