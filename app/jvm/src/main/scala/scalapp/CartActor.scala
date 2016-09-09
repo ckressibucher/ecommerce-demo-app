@@ -20,8 +20,12 @@ class CartActor(var cart: CartData) extends Actor {
   import CartActor._
 
   def receive = {
-    case AddToCart(product, qty) => cart = cart.addProduct(product, qty)
-    case DeleteProduct(product)  => cart = cart.deleteProduct(product)
-    case GetCartCopy             => sender() ! cart.copy()
+    case AddToCart(product, qty) =>
+      cart = cart.addProduct(product, qty)
+      sender ! None // success
+    case DeleteProduct(product) =>
+      cart = cart.deleteProduct(product)
+      sender ! None
+    case GetCartCopy => sender ! cart.copy()
   }
 }

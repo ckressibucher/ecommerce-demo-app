@@ -19,18 +19,22 @@ case class CartData(productItems: List[CartItem]) {
   /** Directly set the new quantity of the product */
   def updateProductQty(product: Product, newQty: Int): CartData = {
     // remove old item for this product (if found) and add new item
-    val newItems = productItems.filterNot(_._1.name == product.name) :+ (product, newQty)
+    val newItems = productItems.filterNot(_.product.name == product.name) :+ CartItem(product, newQty)
     copy(productItems = newItems)
   }
 
   def deleteProduct(product: Product): CartData = {
-    val newItems = productItems.filterNot(_._1.name == product.name)
+    val newItems = productItems.filterNot(_.product.name == product.name)
     copy(productItems = newItems)
   }
 
-  def qtyByProduct(product: Product): Int = productItems.find(_._1.name == product.name) match {
-    case Some((_, q)) => q
-    case None         => 0
+  def qtyByProduct(product: Product): Int = productItems.find(_.product.name == product.name) match {
+    case Some(CartItem(_, q)) => q
+    case None                 => 0
   }
 
+}
+
+object CartData {
+  val empty = CartData(List())
 }

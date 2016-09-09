@@ -15,17 +15,52 @@ import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js
 import scalapp.Api
 import scalapp.model.{ Product }
+import scalapp.model.CartData
+import diode.data.AsyncAction
+import scalapp.model.ResultStatus
+import scalapp.model.ResultStatus
 
 object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
 
   override protected def initialModel = AppModel(CategoryModel(Pot.empty, None),
     ProductModel(Pot.empty),
-    CartModel(Pot.empty))
+    CartData.empty)
 
   override protected val actionHandler = composeHandlers(
     new CategoryHandler(zoomRW(_.categories)((m, v) => m.copy(categories = v))),
     new ProductHandler(zoomRW(_.products)((m, v) => m.copy(products = v))
-      .zoomRW(_.all)((m, v) => m.copy(all = v))))
+      .zoomRW(_.all)((m, v) => m.copy(all = v))),
+    new CartHandler(zoomRW(_.cart)((m, v) => m.copy(cart = v))))
+
+}
+
+class CartHandler[M](modelRW: ModelRW[M, CartData]) extends ActionHandler(modelRW) {
+
+  val console = js.Dynamic.global.console
+
+  def ignoreResult(effect: => Future[ResultStatus]): Effect =
+    Effect[Action](effect.map(_ => NoAction))
+
+  // TODO handel ajax results
+  override def handle = {
+    case AddProduct(product: Product, qty: Int) => {
+      console.log("add product " + product.name + ": " + qty)
+      val effect = ignoreResult(AjaxService[Api].addToCart("session", product.name.name, qty).call())
+      updated(value.addProduct(product, qty), effect)
+    }
+    case RemoveProduct(product: Product) => {
+      console.log("remove product " + product.name)
+      val effect = ignoreResult(AjaxService[Api].deleteFromCart("session", product.name.name).call())
+      updated(value.deleteProduct(product), effect)
+    }
+    case UpdateProductQty(product: Product, qty: Int) => {
+      console.log("update qty of product " + product.name + " to " + qty)
+      val oldQty = value.qtyByProduct(product)
+      val diffQty = qty - oldQty
+      val effect = ignoreResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call())
+      updated(value.updateProductQty(product, qty), effect)
+    }
+  }
 
 }
 
@@ -47,7 +82,6 @@ class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandl
     case action: UpdateCategories =>
       {
         val updateEffect = action.effect(AjaxService[Api].categories().call())(identity _)
-        //action.handleWith(this, updateEffect)(PotAction.handler())
         action.handle {
           case PotEmpty =>
             updated(value.copy(cats = value.cats.pending()), updateEffect)

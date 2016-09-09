@@ -14,6 +14,7 @@ import scalapp.model.{ Category, Product }
 import scalapp.client.components.CategoryList
 import scalapp.client.components.ProductsList
 import diode.data.Pot
+import scalapp.client.DiodeDispatcher
 
 /** Show the category list and the products of the current category
   */
@@ -21,7 +22,8 @@ object CategoryPage {
 
   case class Props(router: RouterCtl[Loc], currenct: Category,
     catsComp: ReactConnectProxy[CategoryModel],
-    prodComp: ReactConnectProxy[Pot[Seq[Product]]])
+    prodComp: ReactConnectProxy[Pot[Seq[Product]]],
+    dispatcher: DiodeDispatcher)
 
   val component = ReactComponentB[Props]("CategoryPage")
     .render_P { props =>
@@ -32,7 +34,7 @@ object CategoryPage {
           <.aside(^.className := "third-800 fourth-1000",
             props.catsComp(CategoryList(props.router, _))),
           <.main(^.className := "two-third-800 three-fourth-1000",
-            props.prodComp(ProductsList(_)))))
+            props.prodComp(ProductsList(_, props.dispatcher)))))
     }
     .build
 

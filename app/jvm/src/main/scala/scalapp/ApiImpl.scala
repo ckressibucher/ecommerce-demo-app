@@ -72,7 +72,7 @@ object ApiImpl {
     Product(ProductName("Silver desert necklace"), Price(18900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/acj000_2.jpg"), Category("Jewelry")));
 
   def productByName(name: String): Option[Product] =
-    dummyProducts.find(_.name == name)
+    dummyProducts.find(_.name.name == name)
 
   def errProductDoesNotExist(p: String): ResultStatus =
     Some(s"product $p does not exist")

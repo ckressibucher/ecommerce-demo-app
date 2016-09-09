@@ -29,7 +29,7 @@ object Page {
 
   type PageView = PageProps => ReactElement
 
-  case class PageProps(rootModel: ModelR[_, AppModel], page: Loc, components: Components, dp: Dispatcher, router: RouterCtl[Loc])
+  case class PageProps(rootModel: ModelR[_, AppModel], page: Loc, components: Components, dispatcher: Dispatcher, router: RouterCtl[Loc])
 
   case class Components(catList: ReactConnectProxy[CategoryModel], products: ReactConnectProxy[Pot[Seq[Product]]])
 
@@ -38,7 +38,7 @@ object Page {
   case class HeaderProps(page: Loc, router: RouterCtl[Loc], dp: Dispatcher)
 
   object HeaderProps {
-    def apply(allProps: PageProps) = new HeaderProps(allProps.page, allProps.router, allProps.dp)
+    def apply(allProps: PageProps) = new HeaderProps(allProps.page, allProps.router, allProps.dispatcher)
   }
 
   val Header = ReactComponentB[HeaderProps]("header")
@@ -68,14 +68,15 @@ object Page {
   val DashboardView: PageView = (props) => {
     <.section(
       Header(HeaderProps(props)),
-      Dashboard(props.router, props.components.catList, props.components.products),
+      Dashboard(props.router, props.components.catList, props.components.products, props.dispatcher),
       Footer())
   }
 
   def categoryView(cur: Category): PageView = (props) => {
     val catProps = CategoryPage.Props(props.router, cur,
       props.components.catList,
-      props.components.products)
+      props.components.products,
+      props.dispatcher)
     <.section(
       Header(HeaderProps(props)),
       CategoryPage.component(catProps),

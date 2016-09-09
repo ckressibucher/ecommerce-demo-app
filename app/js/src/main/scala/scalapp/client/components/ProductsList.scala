@@ -11,10 +11,16 @@ import japgolly.scalajs.react.ReactComponentB
 import japgolly.scalajs.react.ReactNode
 import diode.react.ReactPot._
 import scalapp.model.`package`.Price
+import diode.Action
+import scalapp.client.AddProduct
+import scalapp.client.DiodeDispatcher
+import scalapp.client.DiodeDispatcher
 
 object ProductsList {
 
-  case class Props(proxy: ModelProxy[Pot[Seq[Product]]])
+  case class Props(proxy: ModelProxy[Pot[Seq[Product]]], dispatcher: DiodeDispatcher)
+
+  case class ProductBoxProps(product: Product, dispatcher: Action => Callback)
 
   val PriceBox = ReactComponentB[Price]("price-box")
     .render_P(price => {
@@ -27,20 +33,25 @@ object ProductsList {
     })
     .build
 
-  val ProductBox = ReactComponentB[Product]("product-box")
-    .render_P(p => <.div(
-      ^.className := "card",
-      <.header(<.h3(p.name.name)),
-      <.img(^.src := p.img.url),
-      <.p("Category: " + p.cat.name),
-      PriceBox(p.price),
-      <.footer(<.button("Add to cart"))))
+  val ProductBox = ReactComponentB[ProductBoxProps]("product-box")
+    .render_P(props => {
+      val p = props.product
+      val dispatcher = props.dispatcher
+      <.div(
+        ^.className := "card",
+        <.header(<.h3(p.name.name)),
+        <.img(^.src := p.img.url),
+        <.p("Category: " + p.cat.name),
+        PriceBox(p.price),
+        <.footer(
+          <.button(^.onClick --> dispatcher(AddProduct(p, 1)), "Add to cart")))
+    })
     .build
 
-  def renderProducts(proxy: ModelProxy[Pot[Seq[Product]]]): ReactNode = {
-    proxy.value.render(ps => {
+  def renderProducts(props: Props): ReactNode = {
+    props.proxy.value.render(ps => {
       <.div(^.className := "product-list one flex two-800 three-1000 four-1200",
-        ps.map { p: Product => ProductBox.withKey(p.name.name)(p) })
+        ps.map { p: Product => ProductBox.withKey(p.name.name)(ProductBoxProps(p, props.dispatcher)) })
     })
   }
 
@@ -48,7 +59,7 @@ object ProductsList {
     .render_P { p =>
       <.div(
         <.h2("Products"),
-        renderProducts(p.proxy))
+        renderProducts(p))
     }
     .componentDidMount(scope => {
       val proxy = scope.props.proxy
@@ -56,5 +67,5 @@ object ProductsList {
     })
     .build
 
-  def apply(proxy: ModelProxy[Pot[Seq[Product]]]) = ProductList(Props(proxy))
+  def apply(proxy: ModelProxy[Pot[Seq[Product]]], disp: DiodeDispatcher) = ProductList(Props(proxy, disp))
 }

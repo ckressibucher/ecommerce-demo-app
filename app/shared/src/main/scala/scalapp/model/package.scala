@@ -10,7 +10,7 @@ package object model {
 
   /** A product, and its quantity in the cart.
     */
-  type CartItem = (Product, Int)
+  case class CartItem(product: Product, qty: Int)
 
   case class ProductName(name: String) extends AnyVal
 
