@@ -11,6 +11,7 @@ import japgolly.scalajs.react.extra.router.RouterCtl
 import scalapp.client.Loc
 import scalapp.client.CategoryLoc
 import scalapp.client.DashboardLoc
+import scalapp.client.ReactHelper._
 
 object CategoryList {
 
@@ -35,7 +36,7 @@ object CategoryList {
   def renderCategories(r: RouterCtl[Loc], proxy: ModelProxy[CategoryModel]) = {
     val cats = proxy.value.cats
     val cur = proxy.value.cur
-    def onClickMod(c: Category) = r.setEH(CategoryLoc(c)).andThen { _ >> proxy.dispatch(SelectCategory(c)) }
+    def onClickMod(c: Category) = addToRouterCallback(r.setEH(CategoryLoc(c)), proxy.dispatch(SelectCategory(c)))
     def onClickTagMod(c: Category) = ^.onClick ==> onClickMod(c)
     r.link(DashboardLoc)
     cats.render(_.map(c => renderCat(c, cur, onClickTagMod(c))))

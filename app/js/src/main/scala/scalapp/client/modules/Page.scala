@@ -18,6 +18,8 @@ import scalapp.client.AppModel
 import scalapp.client.CategoryModel
 import scalapp.model.Category
 import scalapp.model.Product
+import scalapp.client.ReactHelper._
+import diode.Dispatcher
 
 /** The main entry point for the "view"
   */
@@ -33,11 +35,18 @@ object Page {
 
   val year = (new js.Date()).getFullYear()
 
-  val Header = ReactComponentB[Loc]("header")
-    .render_P(loc =>
+  case class HeaderProps(page: Loc, router: RouterCtl[Loc], dp: Dispatcher)
+
+  object HeaderProps {
+    def apply(allProps: PageProps) = new HeaderProps(allProps.page, allProps.router, allProps.dp)
+  }
+
+  val Header = ReactComponentB[HeaderProps]("header")
+    .render_P(props =>
       <.header(
         <.nav(^.id := "main-nav",
           <.a(^.href := "#", ^.className := "brand",
+            ^.onClick ==> addToRouterCallback(props.router.setEH(DashboardLoc), props.dp(ResetCategory)),
             <.img(^.className := "logo", ^.src := "/images/logo.png"),
             <.span("XYZ - Online Shop")),
           <.input(^.id := "bmenub", ^.`type` := "checkbox", ^.className := "show"),
@@ -47,7 +56,7 @@ object Page {
             <.a("To Cart (x articlesTODO)"),
             <.a("Newest products"))),
         <.div(^.className := "spacer-afternav", " "),
-        <.div(^.className := "breadcrumb", loc.toString())))
+        <.div(^.className := "breadcrumb", props.page.toString())))
     .build
 
   val Footer = ReactComponentB[Unit]("footer")
@@ -58,7 +67,7 @@ object Page {
 
   val DashboardView: PageView = (props) => {
     <.section(
-      Header(props.page),
+      Header(HeaderProps(props)),
       Dashboard(props.router, props.components.catList, props.components.products),
       Footer())
   }
@@ -68,7 +77,7 @@ object Page {
       props.components.catList,
       props.components.products)
     <.section(
-      Header(props.page),
+      Header(HeaderProps(props)),
       CategoryPage.component(catProps),
       Footer())
   }
@@ -83,4 +92,5 @@ object Page {
 
   def render(model: ModelR[_, AppModel], page: Loc, c: Components, dp: Dispatcher, r: RouterCtl[Loc]) =
     DefaultLayout(PageProps(model, page, c, dp, r))
+
 }

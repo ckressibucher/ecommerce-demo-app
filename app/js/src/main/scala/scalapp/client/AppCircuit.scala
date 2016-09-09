@@ -43,6 +43,7 @@ class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandl
   /* http://ochrons.github.io/diode/advanced/PotActions.html */
   override def handle = {
     case SelectCategory(newCat) => updated(value.copy(cur = Some(newCat)))
+    case ResetCategory          => updated(value.copy(cur = None))
     case action: UpdateCategories =>
       {
         val updateEffect = action.effect(AjaxService[Api].categories().call())(identity _)
