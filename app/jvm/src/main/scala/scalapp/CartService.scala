@@ -82,9 +82,13 @@ object CartService {
       val taxTotal = taxLines.foldLeft(0L) {
         case (total, item) => total + item.sum.cents
       }
-      val grandTotal = taxTotal + okLines.foldLeft(0L) {
-        case (lineTotal, ln) => lineTotal + ln.price.cents
+      val sumLines = okLines.foldLeft(0L) {
+          case (lineTotal, ln) => lineTotal + ln.price.cents
       }
+      val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
+        sumLines
+      else
+        taxTotal + sumLines
       Right(CartView(okLines, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
     }
   }
@@ -95,8 +99,14 @@ object CartService {
     * can "add implementations"
     * of unrelated types more easily?
     */
-  case class Article(product: Product, price: Cents) extends EcmProduct[TaxCls] {
-    def netPrice: Option[java.math.BigDecimal] = Some(new BigDecimal(price))
+  case class Article(product: Product, price: Cents)(implicit taxSystem: TaxSystem[TaxCls]) extends EcmProduct[TaxCls] {
+    def netPrice: Option[java.math.BigDecimal] = {
+      implicit val mc = MathContext.DECIMAL128
+
+      val taxRate = taxSystem.rate(taxClass)
+      val res = taxRate.netAmount(new BigDecimal(price))
+      Some(res)
+    }
 
     // map the "scalapp" tax class enumerable to the `TaxCls` implementation
     def taxClass = product.taxClass match {

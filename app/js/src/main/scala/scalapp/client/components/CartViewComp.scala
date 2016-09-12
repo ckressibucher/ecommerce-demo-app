@@ -34,16 +34,18 @@ object CartViewComp {
       <.div(^.className := "cart-totals",
         <.h3("Totals"),
         <.table(
-          <.thead(
-            <.td("Net total:"), <.td(^.colSpan := 2, PriceBox.PriceBox(net))
-          ),
           <.tbody(
+            <.tr(
+              <.td("Net total:"), <.td(^.colSpan := 2, PriceBox.PriceBox(net))
+            ),
             cartView.taxes.lines.zipWithIndex.map {
               case (ln, idx) => TotalsLine.withKey(idx)(ln)
             }
           ),
           <.tfoot(
+            <.tr(
             <.td("Total: "), <.td(^.colSpan := 2, PriceBox.PriceBox(cartView.grandTotal))
+            )
           )
         )
       )
