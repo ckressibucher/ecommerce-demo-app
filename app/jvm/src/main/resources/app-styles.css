@@ -41,4 +41,8 @@
   text-align: right;
 }
 
+.mini-cart .price-box {
+  text-align: left;
+  display: inline;
+}
 

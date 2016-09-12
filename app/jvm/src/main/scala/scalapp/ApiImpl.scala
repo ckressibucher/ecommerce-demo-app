@@ -1,17 +1,14 @@
 package scalapp
 
-import scalapp.model._
 import akka.actor.ActorRef
 import akka.pattern.ask
-import CartFactory._
 import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import scala.util.Success
-import scala.concurrent.{ ExecutionContext, Future }
+
 import scala.concurrent.Future.successful
-import scalapp.CartActor.DeleteProduct
-import scalapp.CartActor.GetCartView
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scalapp.CartFactory.CartFacadeAction
+import scalapp.model._
 
 class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) extends Api {
   import scalapp.jvm.Data._
@@ -31,38 +28,26 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     case None    => successful(dummyProducts)
   }
 
-  /** Returns `Some` error message in case of failure, `None` in case of success.
-    */
-  def addToCart(sessId: String, productName: String, qty: Int): Future[ResultStatus] =
+  def addToCart(sessId: String, productName: String, qty: Int): Future[CartView] =
     productByName(productName) match {
-      case Some(p: Product) => {
-        cartBySessId(sessId)
-          .flatMap(_ ? CartActor.AddToCart(p, qty))
-          .map(_.asInstanceOf[ResultStatus])
-      }
-      case None => successful(errProductDoesNotExist(productName))
+      case Some(p: Product) =>
+        cartFactory ! CartFacadeAction(sessId, CartActor.AddToCart(p, qty))
+        (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).flatMap {
+          case Right(cartView) => Future.successful(cartView.asInstanceOf[CartView])
+          case Left(err: String) => Future.failed(new RuntimeException(err))
+        }
+      case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
-  def deleteFromCart(sessId: String, productName: String): Future[ResultStatus] =
+  def deleteFromCart(sessId: String, productName: String): Future[CartView] =
     productByName(productName) match {
-      case Some(p: Product) => {
-        cartBySessId(sessId).flatMap(_ ? CartActor.DeleteProduct(p)).map(_.asInstanceOf[ResultStatus])
-      }
-      case None => successful(errProductDoesNotExist(productName))
+      case Some(p: Product) =>
+        cartFactory ! CartFacadeAction(sessId, CartActor.DeleteProduct(p))
+        (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).mapTo[CartView]
+      case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
   def showCart(sessId: String): Future[CartView] =
-    cartBySessId(sessId).flatMap { cartActor =>
-      val resultAny = cartActor ? GetCartView
-      println("ok, got result")
-      val result = resultAny.asInstanceOf[Future[Either[String, CartView]]]
-      result flatMap {
-        case Left(err) => Future.failed(new RuntimeException(err))
-        case Right(cv) => Future.successful(cv)
-      }
-    }
+    (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).mapTo[CartView]
 
-  def cartBySessId(id: String): Future[ActorRef] = {
-    (cartFactory ? CartFactory.GetCartActor(id)).map(_.asInstanceOf[ActorRef])
-  }
 }

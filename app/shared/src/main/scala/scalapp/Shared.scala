@@ -20,9 +20,9 @@ trait Api {
 
   /** Returns `Some` error message in case of failure, `None` in case of success.
     */
-  def addToCart(sessId: String, productName: String, qty: Int): Future[ResultStatus]
+  def addToCart(sessId: String, productName: String, qty: Int): Future[CartView]
 
-  def deleteFromCart(sessId: String, productName: String): Future[ResultStatus]
+  def deleteFromCart(sessId: String, productName: String): Future[CartView]
 
   def showCart(sessId: String): Future[CartView]
 }

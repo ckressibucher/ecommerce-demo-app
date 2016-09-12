@@ -1,7 +1,6 @@
 package scalapp
 
-import scalapp.model._
-import akka.actor.{ Actor, Props, ActorRef }
+import akka.actor.{Actor, Props}
 
 class ApiRouter extends Actor {
   import ApiRouter._
@@ -17,16 +16,14 @@ class ApiRouter extends Actor {
       // get a handle to the sender ActorRef
       val sdr = sender()
       val f = Router.route[Api](apiImpl) {
-        // println(args)
         autowire.Core.Request(segments, args)
       }
       f.onSuccess {
-        case x =>
-          // println(x)
-          sdr ! x
+        case x => sdr ! x
       }
       f.onFailure {
-        case y => println(y.getMessage);
+        // TODO how to handle failure?
+        case y => println(y)
       }
     }
   }

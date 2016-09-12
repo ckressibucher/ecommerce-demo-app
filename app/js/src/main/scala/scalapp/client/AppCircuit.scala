@@ -4,6 +4,7 @@ import scalapp.client.{ AppModel => RootModel }
 import diode.Circuit
 import diode.react.{ ReactConnector, ReactConnectProxy }
 import diode._
+import diode.data.Ready
 import diode.data.Pot
 import diode.data.PotState._
 import scalapp.model.Category
@@ -41,10 +42,9 @@ class CartHandler[M](modelRW: ModelRW[M, CartData]) extends ActionHandler(modelR
 
   val console = js.Dynamic.global.console
 
-  def handleAjaxResult(effect: => Future[ResultStatus]): Effect =
+  def handleAjaxResult(effect: => Future[CartView]): Effect =
     Effect[Action](effect.map { result =>
-      result.foreach(err => console.error(err))
-      UpdateCartView() // reload data
+      UpdateCartView(Ready[CartView](result))
     })
 
   override def handle = {

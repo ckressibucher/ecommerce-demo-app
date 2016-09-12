@@ -44,7 +44,6 @@ object Server {
       path("api" / Segments) { s =>
         extract { _.request.entity.toStrict(3.seconds).map(_.data.decodeString("UTF-8")) } { bodyFuture =>
           val r: Future[String] = bodyFuture.flatMap { body =>
-            println("body: " + body)
             val args = upick.read[Map[String, String]](body)
             (apiRouter ? ApiRouter.Request(s, args)).map(_.asInstanceOf[String])
           }

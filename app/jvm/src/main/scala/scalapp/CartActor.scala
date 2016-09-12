@@ -27,9 +27,7 @@ class CartActor(var cart: CartData) extends Actor {
       cart = cart.deleteProduct(product)
       sender ! None
     case GetCartView => {
-      println("receive 'getCartView'")
       val result = CartService.caluclateCart(cart)
-      println("result: " + result.toString)
       sender() ! result
     }
   }

@@ -98,8 +98,8 @@ object CartViewComp {
         p.proxy.value.render(cartView => {
           val totalNumProducts = cartView.lines.map(_.qty).sum
           <.div(
-            <.span(toCart, "Cart: "),
-            <.button(s"$totalNumProducts products"), " - ", PriceBox.PriceBox(cartView.grandTotal))
+            <.span("Cart: "),
+            <.button(toCart, s"$totalNumProducts products", " - ", PriceBox.PriceBox(cartView.grandTotal)))
         }),
         p.proxy.value.renderEmpty(<.button(toCart, "To Cart"))
       )
