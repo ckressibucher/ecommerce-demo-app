@@ -76,16 +76,16 @@ object CartService {
         case (taxClass: TaxCls, value) => {
           val taxRate = theTaxSystem.rate(taxClass)
           val taxRateAsDouble = taxRate.num.doubleValue() / taxRate.denom.doubleValue()
-          CartView.TaxLine(taxClass.toString, taxRateAsDouble, value)
+          CartView.TaxLine(taxClass.toString, taxRateAsDouble, Price(value))
         }
       }
       val taxTotal = taxLines.foldLeft(0L) {
-        case (total, item) => total + item.sum
+        case (total, item) => total + item.sum.cents
       }
       val grandTotal = taxTotal + okLines.foldLeft(0L) {
         case (lineTotal, ln) => lineTotal + ln.price.cents
       }
-      Right(CartView(okLines, CartView.TaxResult(taxLines.toList, CartView.TaxTotal(taxTotal)), grandTotal))
+      Right(CartView(okLines, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
     }
   }
 

@@ -7,7 +7,7 @@ import japgolly.scalajs.react.{Callback, ReactComponentB}
 import japgolly.scalajs.react.vdom.prefix_<^._
 
 import scalapp.client.{DiodeDispatcher, UpdateCartView}
-import scalapp.model.{CartView => CartViewModel}
+import scalapp.model.{Price, CartView => CartViewModel}
 
 object CartViewComp {
 
@@ -22,23 +22,53 @@ object CartViewComp {
         <.td(^.className := "price-col", PriceBox.PriceBox(line.price))))
     .build
 
+  val TotalsLine = ReactComponentB[CartViewModel.TaxLine]("cart-totals-line")
+    .render_P(line => <.tr(
+      <.td(line.cls), <.td(line.rate), <.td(PriceBox.PriceBox(line.sum))
+    ))
+    .build
+
+  val CartTotals = ReactComponentB[CartViewModel]("cart-totals")
+    .render_P((cartView: CartViewModel) => {
+      val net = Price(cartView.grandTotal.cents - cartView.taxes.total.cents)
+      <.div(^.className := "cart-totals",
+        <.h3("Totals"),
+        <.table(
+          <.thead(
+            <.td("Net total:"), <.td(^.colSpan := 2, PriceBox.PriceBox(net))
+          ),
+          <.tbody(
+            cartView.taxes.lines.zipWithIndex.map {
+              case (ln, idx) => TotalsLine.withKey(idx)(ln)
+            }
+          ),
+          <.tfoot(
+            <.td("Total: "), <.td(^.colSpan := 2, PriceBox.PriceBox(cartView.grandTotal))
+          )
+        )
+      )
+    })
+    .build
+
   def renderCart(p: Props) = {
     p.proxy.value.render(cartView => {
       if (cartView.lines.isEmpty) {
         <.p("Your cart is empty.")
       } else {
-        <.h2("Your cart")
-        <.table(^.className := "cart-view",
-          <.thead(
-            <.tr(
-              <.th("Product"),
-              <.th("Quantity"),
-              <.th("Tax class"),
-              <.th(^.className := "price-col", "Line sum"))),
-          <.tbody(
-            cartView.lines.zipWithIndex.map {
-              case (ln: CartViewModel.Line, idx: Int) => Line.withKey(idx)(ln)
-            }))
+        <.div(
+          <.h2("Your cart"),
+          <.table(^.className := "cart-view",
+            <.thead(
+              <.tr(
+                <.th("Product"),
+                <.th("Quantity"),
+                <.th("Tax class"),
+                <.th(^.className := "price-col", "Line sum"))),
+            <.tbody(
+              cartView.lines.zipWithIndex.map {
+                case (ln: CartViewModel.Line, idx: Int) => Line.withKey(idx)(ln)
+              })),
+          CartTotals(cartView))
       }
     })
   }
