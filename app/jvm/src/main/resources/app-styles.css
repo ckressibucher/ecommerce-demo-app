@@ -35,3 +35,10 @@
   color: white;
 }
 
+/* cart */
+.price-col,
+.price-box {
+  text-align: right;
+}
+
+

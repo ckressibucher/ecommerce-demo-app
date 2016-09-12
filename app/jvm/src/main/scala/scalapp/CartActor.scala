@@ -29,7 +29,7 @@ class CartActor(var cart: CartData) extends Actor {
     case GetCartView => {
       println("receive 'getCartView'")
       val result = CartService.caluclateCart(cart)
-      println("result: " + result.toString())
+      println("result: " + result.toString)
       sender() ! result
     }
   }

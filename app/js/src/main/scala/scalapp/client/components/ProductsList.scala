@@ -10,10 +10,9 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.ReactComponentB
 import japgolly.scalajs.react.ReactNode
 import diode.react.ReactPot._
-import scalapp.model.`package`.Price
+import scalapp.model.Price
 import diode.Action
 import scalapp.client.AddProduct
-import scalapp.client.DiodeDispatcher
 import scalapp.client.DiodeDispatcher
 
 object ProductsList {
@@ -21,17 +20,6 @@ object ProductsList {
   case class Props(proxy: ModelProxy[Pot[Seq[Product]]], dispatcher: DiodeDispatcher)
 
   case class ProductBoxProps(product: Product, dispatcher: Action => Callback)
-
-  val PriceBox = ReactComponentB[Price]("price-box")
-    .render_P(price => {
-      val main = (price.cents / 100).toString()
-      val c = (price.cents % 100).toString()
-      <.div(
-        <.span(^.className := "price-value", main + "." + c),
-        " ",
-        <.span(^.className := "price-currency", "Euro"))
-    })
-    .build
 
   val ProductBox = ReactComponentB[ProductBoxProps]("product-box")
     .render_P(props => {
@@ -42,7 +30,7 @@ object ProductsList {
         <.header(<.h3(p.name.name)),
         <.img(^.src := p.img.url),
         <.p("Category: " + p.cat.name),
-        PriceBox(p.price),
+        PriceBox.PriceBox(p.price),
         <.footer(
           <.button(^.onClick --> dispatcher(AddProduct(p, 1)), "Add to cart")))
     })

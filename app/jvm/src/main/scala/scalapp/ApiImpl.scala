@@ -14,7 +14,7 @@ import scalapp.CartActor.DeleteProduct
 import scalapp.CartActor.GetCartView
 
 class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) extends Api {
-  import ApiImpl._
+  import scalapp.jvm.Data._
 
   implicit val timeout = Timeout(2.seconds)
 
@@ -53,7 +53,7 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
 
   def showCart(sessId: String): Future[CartView] =
     cartBySessId(sessId).flatMap { cartActor =>
-      val resultAny = (cartActor ? GetCartView)
+      val resultAny = cartActor ? GetCartView
       println("ok, got result")
       val result = resultAny.asInstanceOf[Future[Either[String, CartView]]]
       result flatMap {
@@ -65,25 +65,4 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
   def cartBySessId(id: String): Future[ActorRef] = {
     (cartFactory ? CartFactory.GetCartActor(id)).map(_.asInstanceOf[ActorRef])
   }
-}
-
-object ApiImpl {
-  val dummyCategories = List(Category("Shoes"), Category("Bags & Luggage"), Category("Glasses"), Category("Jewelry"))
-
-  val dummyProducts = List(
-    Product(ProductName("black shoes"), Price(8900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams000a_2.jpg"), Category("Shoes")),
-    Product(ProductName("Suede loafer, navy"), Price(11900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams010a_2.jpg"), Category("Shoes")),
-    Product(ProductName("Wingtip, Cognac"), Price(9900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/m/ams005a_2.jpg"), Category("Shoes")),
-    Product(ProductName("Isla Handbag"), Price(18900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/b/abl000_4.jpg"), Category("Bags & Luggage")),
-    Product(ProductName("Houston travel wallet"), Price(5900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/b/abl004a_1.jpg"), Category("Bags & Luggage")),
-    Product(ProductName("Retro glasses"), Price(8900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/ace002a_1.jpg"), Category("Glasses")),
-    Product(ProductName("Blue horizon bracelets"), Price(7900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/acj006_2.jpg"), Category("Jewelry")),
-    Product(ProductName("Silver desert necklace"), Price(18900l), ImgPath("http://cdn.magento-demo.lexiconn.com/media/catalog/product/cache/1/small_image/210x/9df78eab33525d08d6e5fb8d27136e95/a/c/acj000_2.jpg"), Category("Jewelry")));
-
-  def productByName(name: String): Option[Product] =
-    dummyProducts.find(_.name.name == name)
-
-  def errProductDoesNotExist(p: String): ResultStatus =
-    Some(s"product $p does not exist")
-
 }

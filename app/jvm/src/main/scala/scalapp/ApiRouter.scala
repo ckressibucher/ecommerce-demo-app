@@ -14,19 +14,19 @@ class ApiRouter extends Actor {
 
   def receive = {
     case Request(segments, args) => {
-      println("handle request...")
+      // get a handle to the sender ActorRef
       val sdr = sender()
       val f = Router.route[Api](apiImpl) {
-        println(args)
+        // println(args)
         autowire.Core.Request(segments, args)
       }
       f.onSuccess {
         case x =>
-          println(x)
+          // println(x)
           sdr ! x
       }
       f.onFailure {
-        case y => println(y.getMessage)
+        case y => println(y.getMessage);
       }
     }
   }

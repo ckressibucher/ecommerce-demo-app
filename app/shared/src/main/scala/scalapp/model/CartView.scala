@@ -9,7 +9,7 @@ case class CartView(lines: immutable.Seq[CartView.Line], taxes: CartView.TaxResu
   */
 object CartView {
 
-  case class Line(p: Product, qty: Int, price: Long, taxClass: String)
+  case class Line(p: Product, qty: Int, price: Price, taxClass: String)
 
   case class TaxLine(cls: String, rate: Double, sum: Long)
 

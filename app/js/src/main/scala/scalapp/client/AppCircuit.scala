@@ -14,7 +14,7 @@ import scala.concurrent.Future
 import scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scalajs.js
 import scalapp.Api
-import scalapp.model.{ Product }
+import scalapp.model.Product
 import scalapp.model.CartData
 import diode.data.AsyncAction
 import scalapp.model.ResultStatus

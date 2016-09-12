@@ -7,12 +7,8 @@ import japgolly.scalajs.react.ReactComponentB
 
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
-import scalapp.client.CategoryModel
 import scalapp.client.Loc
-import scalapp.client.ProductModel
 import scalapp.model.{ Category, Product }
-import scalapp.client.components.CategoryList
-import scalapp.client.components.ProductsList
 import diode.data.Pot
 import scalapp.client.DiodeDispatcher
 import scalapp.model.CartView
@@ -24,14 +20,11 @@ object CartPage {
     cartComp: ReactConnectProxy[Pot[CartView]],
     dispatcher: DiodeDispatcher)
 
-  val component = ReactComponentB[Props]("CategoryPage")
+  val component = ReactComponentB[Props]("cart-page")
     .render_P { props =>
       <.section(
-        <.header(
-          <.h2("the current cart state")),
-        <.div(
-          <.main(^.className := "",
-            props.cartComp(CartViewComp(_, props.dispatcher)))))
+        <.h2("Cart"),
+            props.cartComp(CartViewComp(_, props.dispatcher)))
     }
     .build
 
