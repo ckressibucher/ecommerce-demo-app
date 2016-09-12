@@ -3,15 +3,19 @@ package scalapp.client.components
 import diode.data.Pot
 import diode.react.ModelProxy
 import diode.react.ReactPot._
+import japgolly.scalajs.react.extra.router.RouterCtl
+import japgolly.scalajs.react.vdom.ReactNodeFrag
 import japgolly.scalajs.react.{Callback, ReactComponentB}
 import japgolly.scalajs.react.vdom.prefix_<^._
 
-import scalapp.client.{DiodeDispatcher, UpdateCartView}
+import scalapp.client.{DiodeDispatcher, Loc, UpdateCartView}
 import scalapp.model.{Price, CartView => CartViewModel}
 
 object CartViewComp {
 
   case class Props(proxy: ModelProxy[Pot[CartViewModel]], dispatcher: DiodeDispatcher)
+
+  case class MiniCartProps(proxy: ModelProxy[Pot[CartViewModel]], router: RouterCtl[Loc])
 
   val Line = ReactComponentB[CartViewModel.Line]("cart-line")
     .render_P(line =>
@@ -86,5 +90,25 @@ object CartViewComp {
     })
     .build
 
-  def apply(proxy: ModelProxy[Pot[CartViewModel]], disp: DiodeDispatcher) = CartView(Props(proxy, disp))
+  val MiniCart = ReactComponentB[MiniCartProps]("mini-cart")
+    .render_P { p =>
+      val toCart = p.router.setOnClick(scalapp.client.CartLoc)
+      <.div(
+        ^.className := "mini-cart",
+        p.proxy.value.render(cartView => {
+          val totalNumProducts = cartView.lines.map(_.qty).sum
+          <.div(
+            <.span(toCart, "Cart: "),
+            <.button(s"$totalNumProducts products"), " - ", PriceBox.PriceBox(cartView.grandTotal))
+        }),
+        p.proxy.value.renderEmpty(<.button(toCart, "To Cart"))
+      )
+    }
+    .build
+
+  def apply(proxy: ModelProxy[Pot[CartViewModel]], disp: DiodeDispatcher) =
+    CartView(Props(proxy, disp))
+
+  def minicart(proxy: ModelProxy[Pot[CartViewModel]], router: RouterCtl[Loc]) =
+    MiniCart(MiniCartProps(proxy, router))
 }
