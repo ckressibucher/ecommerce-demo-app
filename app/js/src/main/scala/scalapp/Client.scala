@@ -3,27 +3,27 @@ package scalapp
 import scala.language.postfixOps
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
-
 import org.scalajs.dom
-
 import autowire._
 import diode.react.ReactConnectProxy
 import diode.react.ReactPot._
 import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.{ BaseUrl, Redirect, Resolution, Router, RouterConfigDsl, RouterCtl }
+import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Resolution, Router, RouterConfigDsl, RouterCtl}
 import japgolly.scalajs.react.vdom.prefix_<^._
+
 import scalapp.client.AppCircuit
 import scalapp.client.CategoryModel
 import scalapp.client.modules.Dashboard
-import scalapp.model.{ Category, Product }
+import scalapp.model.{Category, Product}
 import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
-import diode.ModelR
+import diode.{ModelR, RootModelR}
 import diode.data.Pot
 import japgolly.scalajs.react.extra.router.RouterConfig
-import scalapp.client._
 
+import scalapp.client._
 import scalapp.client.modules.Page
 import japgolly.scalajs.react.extra.router.StaticDsl.Route
+
 import scalapp.model.CartView
 
 @JSExport
@@ -51,6 +51,13 @@ object Client extends js.JSApp {
   // the main react components (or connect proxies)
   val components = Page.Components(catsList, productsList, cartView)
   val dispatch = (a: diode.Action) => Callback { AppCircuit.dispatch(a) }
+
+  AppCircuit.subscribe(AppCircuit.zoom(identity _)) { model: ModelR[AppModel, AppModel] =>
+    println("debug: updated model:")
+    println(model.value.cartView)
+  }
+
+  AppCircuit.dispatch(InitializeApp)
 
   // configure the router
   val routerConfig: RouterConfig[Loc] = RouterConfigDsl[Loc].buildConfig { dsl =>

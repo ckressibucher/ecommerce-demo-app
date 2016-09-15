@@ -1,44 +1,51 @@
 package scalapp.client
 
-import scalapp.client.{ AppModel => RootModel }
-import diode.Circuit
-import diode.react.{ ReactConnector, ReactConnectProxy }
-import diode._
-import diode.data.Ready
-import diode.data.Pot
-import diode.data.PotState._
-import scalapp.model.Category
 import autowire._
-import scalapp.Api
-import diode.data.PotAction
+import diode.{Circuit, _}
+import diode.data.PotState._
+import diode.data.{Pot, PotAction, Ready}
+import diode.react.ReactConnector
+
 import scala.concurrent.Future
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
-import scalajs.js
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.scalajs.js
 import scalapp.Api
-import scalapp.model.Product
-import scalapp.model.CartData
-import diode.data.AsyncAction
-import scalapp.model.ResultStatus
-import scalapp.model.ResultStatus
-import scalapp.model.CartView
+import scalapp.model.{CartView, Product}
 
 object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
 
   override protected def initialModel = AppModel(CategoryModel(Pot.empty, None),
     ProductModel(Pot.empty),
-    CartData.empty,
     Pot.empty)
 
+  val categoryHandler = new CategoryHandler(zoomRW(_.categories)((m, v) => m.copy(categories = v)))
+  val productHandler = new ProductHandler(zoomRW(_.products)((m, v) => m.copy(products = v))
+    .zoomRW(_.all)((m, v) => m.copy(all = v)))
+  val cartHandler = new CartHandler(zoomRW(_.cartView)((m, v) => m.copy(cartView = v)))
+  val cartViewHandler = new CartViewHandler(zoomRW(_.cartView)((m, v) => m.copy(cartView = v)))
+  val initHandler = new InitHandler(zoomRW(identity _)((m, v) => v))
+
   override protected val actionHandler = composeHandlers(
-    new CategoryHandler(zoomRW(_.categories)((m, v) => m.copy(categories = v))),
-    new ProductHandler(zoomRW(_.products)((m, v) => m.copy(products = v))
-      .zoomRW(_.all)((m, v) => m.copy(all = v))),
-    new CartHandler(zoomRW(_.cart)((m, v) => m.copy(cart = v))),
-    new CartViewHandler(zoomRW(_.cartView)((m, v) => m.copy(cartView = v))))
+    categoryHandler,
+    productHandler,
+    cartHandler,
+    cartViewHandler,
+    initHandler)
 
 }
 
-class CartHandler[M](modelRW: ModelRW[M, CartData]) extends ActionHandler(modelRW) {
+class InitHandler[M](modelRW: ModelRW[M, AppModel]) extends ActionHandler(modelRW) {
+
+  override def handle = {
+    case InitializeApp =>
+      val effect = Effect[Action](AjaxService[Api].showCart("session").call().map { cartViewResult =>
+        UpdateCartView(Ready(cartViewResult))
+      })
+      effectOnly(effect)
+  }
+}
+
+class CartHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(modelRW) {
 
   val console = js.Dynamic.global.console
 
@@ -51,22 +58,30 @@ class CartHandler[M](modelRW: ModelRW[M, CartData]) extends ActionHandler(modelR
     case AddProduct(product: Product, qty: Int) => {
       console.log("add product " + product.name + ": " + qty)
       val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, qty).call())
-      updated(value.addProduct(product, qty), effect)
+      effectOnly(effect)
     }
     case RemoveProduct(product: Product) => {
       console.log("remove product " + product.name)
       val effect = handleAjaxResult(AjaxService[Api].deleteFromCart("session", product.name.name).call())
-      updated(value.deleteProduct(product), effect)
+      effectOnly(effect)
     }
     case UpdateProductQty(product: Product, qty: Int) => {
       console.log("update qty of product " + product.name + " to " + qty)
-      val oldQty = value.qtyByProduct(product)
-      val diffQty = qty - oldQty
-      val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call())
-      updated(value.updateProductQty(product, qty), effect)
+      if (value.isReady) {
+        val oldQty = value.get.qtyByProduct(product)
+        console.log("old qty: " + oldQty)
+        val diffQty = qty - oldQty
+        console.log("diff qty: " + diffQty)
+        val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call())
+        effectOnly(effect)
+      } else {
+        console.log("cart is not ready yet, update action is dropped...")
+        noChange
+      }
     }
+    case ClearCart => effectOnly(
+      handleAjaxResult(AjaxService[Api].clearCart("session").call()))
   }
-
 }
 
 class ProductHandler[M](modelRW: ModelRW[M, Pot[Seq[Product]]]) extends ActionHandler(modelRW) {
@@ -92,23 +107,21 @@ class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandl
   /* http://ochrons.github.io/diode/advanced/PotActions.html */
   override def handle = {
     case SelectCategory(newCat) => updated(value.copy(cur = Some(newCat)))
-    case ResetCategory          => updated(value.copy(cur = None))
+    case ResetCategory => updated(value.copy(cur = None))
     case action: UpdateCategories =>
-      {
-        val updateEffect = action.effect(AjaxService[Api].categories().call())(identity _)
-        action.handle {
-          case PotEmpty =>
-            updated(value.copy(cats = value.cats.pending()), updateEffect)
-          case PotPending =>
-            noChange
-          case PotUnavailable =>
-            updated(CategoryModel(value.cats.unavailable(), None))
-          case PotReady =>
-            updated(CategoryModel(action.potResult, value.cur.filter(action.potResult.get.contains(_))))
-          case PotFailed =>
-            val ex = action.result.failed.get
-            updated(CategoryModel(value.cats.fail(ex), None))
-        }
+      val updateEffect = action.effect(AjaxService[Api].categories().call())(identity _)
+      action.handle {
+        case PotEmpty =>
+          updated(value.copy(cats = value.cats.pending()), updateEffect)
+        case PotPending =>
+          noChange
+        case PotUnavailable =>
+          updated(CategoryModel(value.cats.unavailable(), None))
+        case PotReady =>
+          updated(CategoryModel(action.potResult, value.cur.filter(action.potResult.get.contains(_))))
+        case PotFailed =>
+          val ex = action.result.failed.get
+          updated(CategoryModel(value.cats.fail(ex), None))
       }
   }
 

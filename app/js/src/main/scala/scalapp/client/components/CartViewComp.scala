@@ -126,7 +126,8 @@ object CartViewComp extends ReactEventAliases {
               cartView.lines.zipWithIndex.map {
                 case (ln: CartViewModel.Line, idx: Int) => Line.withKey(idx)((ln, p.dispatcher))
               })),
-          CartTotals(cartView))
+          CartTotals(cartView),
+            <.button(^.onClick --> p.dispatcher(ClearCart), "Clear Cart"))
       }
     })
   }
@@ -156,6 +157,10 @@ object CartViewComp extends ReactEventAliases {
         p.proxy.value.renderEmpty(<.button(toCart, "To Cart"))
       )
     }
+    .componentDidMount(scope => {
+      val proxy = scope.props.proxy
+      Callback.when(proxy.value.isEmpty)(proxy.dispatch(UpdateCartView()))
+    })
     .build
 
   def apply(proxy: ModelProxy[Pot[CartViewModel]], disp: DiodeDispatcher) =

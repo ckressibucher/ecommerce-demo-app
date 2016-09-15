@@ -18,8 +18,15 @@ case class CartData(productItems: List[CartItem]) {
 
   /** Directly set the new quantity of the product */
   def updateProductQty(product: Product, newQty: Int): CartData = {
-    // remove old item for this product (if found) and add new item
-    val newItems = productItems.filterNot(_.product.name == product.name) :+ CartItem(product, newQty)
+    val newItems = if (productItems.exists(_.product.name.name == product.name.name)) {
+      // make sure the order stays the same
+      productItems.map {
+        case i@CartItem(p, _) if p.name == product.name => i.copy(qty = newQty)
+        case i => i
+      }
+    } else {
+      productItems :+ CartItem(product, newQty)
+    }
     copy(productItems = newItems)
   }
 
@@ -30,7 +37,7 @@ case class CartData(productItems: List[CartItem]) {
 
   def qtyByProduct(product: Product): Int = productItems.find(_.product.name == product.name) match {
     case Some(CartItem(_, q)) => q
-    case None                 => 0
+    case None                 => println(s"product ${product.name} not found. products: ${productItems}"); 0
   }
 
 }

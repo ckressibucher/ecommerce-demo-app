@@ -26,3 +26,8 @@ case class AddProduct(product: Product, qty: Int) extends Action
 case class RemoveProduct(product: Product) extends Action
 
 case class UpdateProductQty(product: Product, newQty: Int) extends Action
+
+case object ClearCart extends Action
+
+// message to initialize the most important data when application loads...
+case object InitializeApp extends Action

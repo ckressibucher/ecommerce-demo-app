@@ -8,8 +8,13 @@ object CartActor {
 
   // Message protocol
   sealed trait Msg
+
   case class AddToCart(product: Product, qty: Int) extends Msg
+
   case class DeleteProduct(product: Product) extends Msg
+
+  case object ClearCart extends Msg
+
   case object GetCartView extends Msg
 
   def props = Props(new CartActor(CartData(List())))
@@ -22,13 +27,12 @@ class CartActor(var cart: CartData) extends Actor {
   def receive = {
     case AddToCart(product, qty) =>
       cart = cart.addProduct(product, qty)
-      sender ! None // success
     case DeleteProduct(product) =>
       cart = cart.deleteProduct(product)
-      sender ! None
-    case GetCartView => {
+    case ClearCart =>
+      cart = CartData.empty
+    case GetCartView =>
       val result = CartService.caluclateCart(cart)
       sender() ! result
-    }
   }
 }

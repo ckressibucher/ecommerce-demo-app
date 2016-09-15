@@ -1,8 +1,7 @@
 package scalapp
 
-import scalapp.model.{ Product, Category, ResultStatus }
+import scalapp.model.{ Product, Category }
 import scala.concurrent.Future
-import scalapp.model.CartData
 import scalapp.model.CartView
 
 case class FileData(name: String, size: Long)
@@ -23,6 +22,8 @@ trait Api {
   def addToCart(sessId: String, productName: String, qty: Int): Future[CartView]
 
   def deleteFromCart(sessId: String, productName: String): Future[CartView]
+
+  def clearCart(sessId: String): Future[CartView]
 
   def showCart(sessId: String): Future[CartView]
 }
