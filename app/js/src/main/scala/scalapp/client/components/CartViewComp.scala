@@ -51,7 +51,9 @@ object CartViewComp extends ReactEventAliases {
         ),
         <.button(
           ^.onClick --> fire,
-          "Update"
+          ^.className := "update-qty",
+          ^.title := "update quantity",
+          "↻"
         )
       )
   }
@@ -67,13 +69,16 @@ object CartViewComp extends ReactEventAliases {
         <.tr(
           <.td(line.p.name.name),
           <.td(QtyComponent(QtyProps(line.qty, line.p, dp))),
+          <.td(PriceBox.PriceBox(line.p.price)),
           <.td(line.taxClass),
           <.td(^.className := "price-col", PriceBox.PriceBox(line.price)),
           <.td(
             <.button(
               ^.className := "remove",
+              ^.title := "remove",
               ^.onClick --> dp(RemoveProduct(line.p)),
-              "X")))
+              "(x)")))
+
     }
     .build
 
@@ -119,6 +124,7 @@ object CartViewComp extends ReactEventAliases {
               <.tr(
                 <.th("Product"),
                 <.th("Quantity"),
+                <.th("Unit price"),
                 <.th("Tax class"),
                 <.th(^.className := "price-col", "Line sum"),
                 <.th(^.className := "button-col"))),
