@@ -25,12 +25,20 @@ object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
   val cartViewHandler = new CartViewHandler(zoomRW(_.cartView)((m, v) => m.copy(cartView = v)))
   val initHandler = new InitHandler(zoomRW(identity _)((m, v) => v))
 
-  override protected val actionHandler = composeHandlers(
+  val logHandler = new ActionHandler(zoomRW(x => x)((_, v) => v)) {
+    override def handle: PartialFunction[Any, ActionResult[AppModel]] = {
+      case action => println("action: " + action); noChange
+    }
+  }
+
+  val realActionHandler = composeHandlers(
     categoryHandler,
     productHandler,
     cartHandler,
     cartViewHandler,
     initHandler)
+
+  val actionHandler = foldHandlers(logHandler, realActionHandler)
 
 }
 
@@ -56,26 +64,21 @@ class CartHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(m
 
   override def handle = {
     case AddProduct(product: Product, qty: Int) => {
-      console.log("add product " + product.name + ": " + qty)
       val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, qty).call())
       effectOnly(effect)
     }
     case RemoveProduct(product: Product) => {
-      console.log("remove product " + product.name)
       val effect = handleAjaxResult(AjaxService[Api].deleteFromCart("session", product.name.name).call())
       effectOnly(effect)
     }
     case UpdateProductQty(product: Product, qty: Int) => {
-      console.log("update qty of product " + product.name + " to " + qty)
       if (value.isReady) {
         val oldQty = value.get.qtyByProduct(product)
-        console.log("old qty: " + oldQty)
         val diffQty = qty - oldQty
-        console.log("diff qty: " + diffQty)
         val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call())
         effectOnly(effect)
       } else {
-        console.log("cart is not ready yet, update action is dropped...")
+        console.warn("cart is not ready yet, update action is dropped...")
         noChange
       }
     }

@@ -93,8 +93,8 @@ object CartViewComp extends ReactEventAliases {
             <.tr(
               <.td("Net total:"), <.td(^.colSpan := 2, PriceBox.PriceBox(net))
             ),
-            cartView.taxes.lines.zipWithIndex.map {
-              case (ln, idx) => TotalsLine.withKey(idx)(ln)
+            cartView.taxes.lines.map {
+              case (ln) => TotalsLine.withKey(ln.cls)(ln)
             }
           ),
           <.tfoot(
@@ -123,8 +123,8 @@ object CartViewComp extends ReactEventAliases {
                 <.th(^.className := "price-col", "Line sum"),
                 <.th(^.className := "button-col"))),
             <.tbody(
-              cartView.lines.zipWithIndex.map {
-                case (ln: CartViewModel.Line, idx: Int) => Line.withKey(idx)((ln, p.dispatcher))
+              cartView.lines.map {
+                case (ln: CartViewModel.Line) => Line.withKey(ln.p.name.name)((ln, p.dispatcher))
               })),
           CartTotals(cartView),
             <.button(^.onClick --> p.dispatcher(ClearCart), "Clear Cart"))
