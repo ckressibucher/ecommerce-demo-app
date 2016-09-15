@@ -104,17 +104,12 @@ class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandl
           case PotUnavailable =>
             updated(CategoryModel(value.cats.unavailable(), None))
           case PotReady =>
-            updated(CategoryModel(action.potResult, updateCurrentCat(value.cur, action.potResult.get)))
+            updated(CategoryModel(action.potResult, value.cur.filter(action.potResult.get.contains(_))))
           case PotFailed =>
             val ex = action.result.failed.get
             updated(CategoryModel(value.cats.fail(ex), None))
         }
       }
-  }
-
-  def updateCurrentCat(oldSelection: Option[Category], newCats: Seq[Category]) = oldSelection match {
-    case Some(cat) if !newCats.filter(_ == cat).isEmpty => oldSelection
-    case None => None
   }
 
 }
