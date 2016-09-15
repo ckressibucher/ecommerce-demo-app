@@ -32,10 +32,7 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.AddToCart(p, qty))
-        (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).flatMap {
-          case Right(cartView) => Future.successful(cartView.asInstanceOf[CartView])
-          case Left(err: String) => Future.failed(new RuntimeException(err))
-        }
+        mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
@@ -43,11 +40,16 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.DeleteProduct(p))
-        (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).mapTo[CartView]
+        mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
   def showCart(sessId: String): Future[CartView] =
-    (cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView)).mapTo[CartView]
+    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))
 
+  // `Any` should be `Either[String, CartView]`
+  def mapToCartView(result: Future[Any]): Future[CartView] = result.flatMap {
+    case Right(cartView) => Future.successful(cartView.asInstanceOf[CartView])
+    case Left(err: String) => Future.failed(new RuntimeException(err))
+  }
 }
