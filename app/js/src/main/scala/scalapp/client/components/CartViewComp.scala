@@ -36,7 +36,7 @@ object CartViewComp extends ReactEventAliases {
     } yield props.dp(UpdateProductQty(props.product, qty))).flatten
 
     def handleKeyPress(e: ReactKeyboardEvent): Callback = {
-      if (e.keyCode == KeyCode.Enter) fire
+      if (e.which == KeyCode.Enter) fire
       else Callback.empty
     }
 
