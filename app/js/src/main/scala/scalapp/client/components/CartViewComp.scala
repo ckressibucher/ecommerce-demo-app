@@ -112,6 +112,19 @@ object CartViewComp extends ReactEventAliases {
     })
     .build
 
+  val DiscountForm = ReactComponentB[Props]("discount-form")
+    .render_P(p =>
+      <.div(^.className := "discount-code",
+        <.input(^.`type` := "text",
+          ^.defaultValue := "discount-code",
+          ^.onKeyPress --> Callback.empty // TODO send on enter
+        ),
+        <.button(^.onClick --> Callback.empty,
+          "Apply discount")
+      )
+    )
+    .build
+
   def renderCart(p: Props) = {
     p.proxy.value.render(cartView => {
       if (cartView.lines.isEmpty) {
@@ -131,9 +144,20 @@ object CartViewComp extends ReactEventAliases {
             <.tbody(
               cartView.lines.map {
                 case (ln: CartViewModel.Line) => Line.withKey(ln.p.name.name)((ln, p.dispatcher))
-              })),
+              },
+              cartView.discounts.map {
+                case (d: CartViewModel.Discount) => <.tr(
+                  <.td("discount: " + d.code),
+                  <.td("1"),
+                  <.td(PriceBox.PriceBox(d.amount)),
+                  <.td(d.taxClass),
+                  <.td(PriceBox.PriceBox(d.amount)),
+                  <.td(<.button("remove TODO")))
+              }
+            )),
           CartTotals(cartView),
-            <.button(^.onClick --> p.dispatcher(ClearCart), "Clear Cart"))
+          DiscountForm(p),
+          <.button(^.onClick --> p.dispatcher(ClearCart), "Clear Cart"))
       }
     })
   }

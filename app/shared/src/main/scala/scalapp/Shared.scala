@@ -25,5 +25,7 @@ trait Api {
 
   def clearCart(sessId: String): Future[CartView]
 
+  def applyDiscount(sessId: String, code: String): Future[CartView]
+
   def showCart(sessId: String): Future[CartView]
 }

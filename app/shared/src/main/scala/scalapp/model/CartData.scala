@@ -1,6 +1,6 @@
 package scalapp.model
 
-case class CartData(productItems: List[CartItem]) {
+case class CartData(productItems: List[CartItem], discounts: List[String]) {
 
   /** change the quantity of the given product by `diffQty`
     *
@@ -15,6 +15,15 @@ case class CartData(productItems: List[CartItem]) {
 
   /** Alias for `updateProduct` */
   def addProduct(product: Product, qty: Int): CartData = updateProduct(product, qty)
+
+  def addDiscount(code: String): CartData = {
+    val newDiscs = if (discounts.contains(code))
+      discounts
+    else {
+      discounts :+ code
+    }
+    copy(discounts = newDiscs)
+  }
 
   /** Directly set the new quantity of the product */
   def updateProductQty(product: Product, newQty: Int): CartData = {
@@ -43,5 +52,5 @@ case class CartData(productItems: List[CartItem]) {
 }
 
 object CartData {
-  val empty = CartData(List())
+  val empty = CartData(List(), List())
 }

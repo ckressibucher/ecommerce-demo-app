@@ -2,7 +2,10 @@ package scalapp.model
 
 import scala.collection.immutable
 
-case class CartView(lines: immutable.Seq[CartView.Line], taxes: CartView.TaxResult, grandTotal: Price) {
+case class CartView(lines: immutable.Seq[CartView.Line],
+                    discounts: immutable.Seq[CartView.Discount],
+                    taxes: CartView.TaxResult,
+                    grandTotal: Price) {
 
   def qtyByProduct(product: Product): Int = {
     lines.find(_.p.name.name == product.name.name) match {
@@ -17,6 +20,8 @@ case class CartView(lines: immutable.Seq[CartView.Line], taxes: CartView.TaxResu
 object CartView {
 
   case class Line(p: Product, qty: Int, price: Price, taxClass: String)
+
+  case class Discount(code: String, amount: Price, taxClass: String)
 
   case class TaxLine(cls: String, rate: Double, sum: Price)
 

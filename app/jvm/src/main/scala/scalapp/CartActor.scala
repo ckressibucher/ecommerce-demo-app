@@ -17,7 +17,9 @@ object CartActor {
 
   case object GetCartView extends Msg
 
-  def props = Props(new CartActor(CartData(List())))
+  case class ApplyDiscount(code: String) extends Msg
+
+  def props = Props(new CartActor(CartData.empty))
 }
 
 class CartActor(var cart: CartData) extends Actor {
@@ -31,6 +33,8 @@ class CartActor(var cart: CartData) extends Actor {
       cart = cart.deleteProduct(product)
     case ClearCart =>
       cart = CartData.empty
+    case ApplyDiscount(code) =>
+      cart = cart.addDiscount(code)
     case GetCartView =>
       val result = CartService.caluclateCart(cart)
       sender() ! result

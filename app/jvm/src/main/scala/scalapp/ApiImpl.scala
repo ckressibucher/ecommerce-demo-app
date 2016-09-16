@@ -49,8 +49,13 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     getCartView(sessId)
   }
 
+  def applyDiscount(sessId: String, code: String): Future[CartView] = {
+    cartFactory ! CartFacadeAction(sessId, CartActor.ApplyDiscount(code))
+    getCartView(sessId)
+  }
+
   def showCart(sessId: String): Future[CartView] =
-    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))
+    getCartView(sessId)
 
   private def getCartView(sessId: String) =
     mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))

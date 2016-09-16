@@ -1,17 +1,18 @@
 package scalapp
 
-import scalapp.model.{CartData, Price, Product, TaxRegular, TaxReduced}
+import scalapp.model.{CartData, Price, Product, TaxReduced, TaxRegular}
 import scalapp.jvm.Data
 import plus.coding.ckrecom.{CartContentItem, CartItemCalculator, TaxSystem}
-import plus.coding.ckrecom.impl.Priceable.{Line => PriceLine}
+import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
+import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.{Product => EcmProduct}
 import java.math.{BigDecimal, MathContext}
 
-import plus.coding.ckrecom.CartSystem
-import plus.coding.ckrecom.PriceMode
-import plus.coding.ckrecom.CartBase
+import plus.coding.ckrecom.TaxSystem.DefaultTaxClass
+import plus.coding.ckrecom.{CartBase, CartSystem, PriceMode}
 
 import scala.collection.immutable
+import scala.util.Try
 import scalapp.model.CartView
 
 /** Used to calculate a given cart ([[CartData]]) and return the result
@@ -63,14 +64,32 @@ object CartService {
           }
         }
     }
-    if (lines.count(_.isLeft) > 0) {
-      val allErrors = lines collect {
-        case Left(e) => e
+    val discounts = result.contents.collect {
+      case CartContentItem(FixedDiscount(code, amount), prices) => prices match {
+        case e@Left(_) => e
+        case Right(priceMap) if priceMap.size < 1 => Left("err")
+        case Right(priceMap) if priceMap.size > 1 => Left("err")
+        case Right(priceMap) => {
+          implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
+          val (taxCls, p) = (priceMap.keys.head, priceMap.values.head)
+          val taxClsStr = Data.taxClassString(taxCls)
+          Right(CartView.Discount(code, Price(p), taxClsStr))
+        }
       }
+    }
+    if (lines.count(_.isLeft) > 0 || discounts.count(_.isLeft) > 0) {
+      val allErrors = (lines collect {
+        case Left(e) => e
+      }) ++ (discounts collect {
+        case Left(e) => e
+      })
       Left(allErrors.mkString("; "))
     } else {
       val okLines = lines.collect {
         case Right(ln: CartView.Line) => ln
+      }
+      val okDiscounts = discounts collect {
+        case Right(d: CartView.Discount) => d
       }
       val taxLines = result.taxes(java.math.RoundingMode.HALF_UP) map {
         case (taxClass: TaxCls, value) => {
@@ -85,11 +104,12 @@ object CartService {
       val sumLines = okLines.foldLeft(0L) {
           case (lineTotal, ln) => lineTotal + ln.price.cents
       }
+      // TODO use CartBase result instead??
       val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
         sumLines
       else
         taxTotal + sumLines
-      Right(CartView(okLines, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
+      Right(CartView(okLines, okDiscounts, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
     }
   }
 
@@ -143,8 +163,17 @@ object CartService {
     // This method is used to add any adjustment items, such as discounts or fees.
     // They are appended to the items generated from the result of `buildCartLines`.
     override def buildAdjustmentItems: immutable.Seq[CalcItem] = {
-      // not yet implemented...
-      immutable.Seq.empty
+      val discs = cartData.discounts flatMap { discCode =>
+        if (discCode.startsWith("demo-")) {
+          val amount = Try {
+            List(FixedDiscount(discCode, discCode.substring("demo-".length).toLong))
+          }
+          amount.getOrElse(List())
+        } else {
+          List()
+        }
+      }
+      discs.map { priceable => new FixedDiscountCalc[DefaultTaxClass](priceable, Data.taxRegular) }
     }
   }
 }
