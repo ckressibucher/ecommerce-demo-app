@@ -1,8 +1,8 @@
 package scalapp.client
 
 import diode.Action
-import diode.data.{ Pot, PotAction, AsyncAction }
-import scalapp.model.{ Product, Category, ResultStatus }
+import diode.data.{ Pot, PotAction }
+import scalapp.model.{ Product, Category }
 import scalapp.model.CartView
 
 case class SelectCategory(c: Category) extends Action

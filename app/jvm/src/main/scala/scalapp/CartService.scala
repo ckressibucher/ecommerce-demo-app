@@ -8,6 +8,7 @@ import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.{Product => EcmProduct}
 import java.math.{BigDecimal, MathContext}
 
+import plus.coding.ckrecom.Product.ProductOps
 import plus.coding.ckrecom.TaxSystem.DefaultTaxClass
 import plus.coding.ckrecom.{CartBase, CartSystem, PriceMode}
 
@@ -36,6 +37,21 @@ object CartService {
 
   val theTaxSystem = TaxSystem.DefaultTaxSystem
 
+  val theProductImpl = new EcmProduct[TaxCls, Product] {
+      def netPrice(product: Product, qty: BigDecimal): Option[BigDecimal] = {
+        implicit val mc = MathContext.DECIMAL128
+        val taxRate = theTaxSystem.rate(taxClass(product))
+        val res = taxRate.netAmount(new BigDecimal(product.price.cents))
+        Some(res)
+      }
+
+      // map the "scalapp" tax class enumerable to the `TaxCls` implementation
+      def taxClass(product: Product) = product.taxClassId match {
+        case `TaxRegular` => Data.taxRegular
+        case `TaxReduced` => Data.taxReduced
+      }
+    }
+
   def caluclateCart(cartData: CartData): Either[String, CartView] = {
     val system = new CartCalculation(cartData)
     system.run match {
@@ -47,20 +63,23 @@ object CartService {
     }
   }
 
+  // TODO refactor, too long...
   def mapCartResultToCartView(result: CartBase[TaxCls]): Either[String, CartView] = {
+    implicit val productImpl = theProductImpl
     val lines = result.contents.collect {
       case CartContentItem(PriceLine(article, qty), prices) =>
         prices match {
-          case e @ Left(err)                        => e
+          case e@Left(err) => e
           case Right(priceMap) if priceMap.size > 1 => Left("Unexpected result: more than one tax class")
           case Right(priceMap) if priceMap.size < 1 => Left("Unexpected result: no prices")
           case Right(priceMap) => {
             implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
             val priceSum = priceMap.values.sum
             val taxClass = priceMap.keys.head
-            val articleObj = article.asInstanceOf[Article]
-            val taxClsStr = Data.taxClassString(articleObj.taxClass)
-            Right(CartView.Line(articleObj.product, qty.intValue(), Price(priceSum), taxClsStr))
+            val articleP = article.asInstanceOf[Product]
+            val tc = articleP.taxClass
+            val taxClsStr = Data.taxClassString(tc)
+            Right(CartView.Line(articleP, qty.intValue(), Price(priceSum), taxClsStr))
           }
         }
     }
@@ -102,7 +121,7 @@ object CartService {
         case (total, item) => total + item.sum.cents
       }
       val sumLines = okLines.foldLeft(0L) {
-          case (lineTotal, ln) => lineTotal + ln.price.cents
+        case (lineTotal, ln) => lineTotal + ln.price.cents
       }
       // TODO use CartBase result instead??
       val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
@@ -113,34 +132,15 @@ object CartService {
     }
   }
 
-  /** A simple implementation of a `Product`.
-    *
-    * TODO maybe implement this as typeclass in the ecom library, so we
-    * can "add implementations"
-    * of unrelated types more easily?
-    */
-  case class Article(product: Product, price: Cents)(implicit taxSystem: TaxSystem[TaxCls]) extends EcmProduct[TaxCls] {
-    def netPrice: Option[java.math.BigDecimal] = {
-      implicit val mc = MathContext.DECIMAL128
 
-      val taxRate = taxSystem.rate(taxClass)
-      val res = taxRate.netAmount(new BigDecimal(price))
-      Some(res)
-    }
-
-    // map the "scalapp" tax class enumerable to the `TaxCls` implementation
-    def taxClass = product.taxClass match {
-      case `TaxRegular` => Data.taxRegular
-      case `TaxReduced` => Data.taxReduced
-    }
-  }
+  case class Article(product: Product, price: Cents)(implicit taxSystem: TaxSystem[TaxCls])
 
   /** By implementing a `CartSystem`, we define all properties needed by
     * the library to do its calculations.
     *
     * See the `CartSystem` type to see what abstract members it defines.
     */
-  class CartCalculation(cartData: CartData) extends CartSystem[TaxCls] {
+  class CartCalculation(cartData: CartData) extends CartSystem[TaxCls, Product] { cartCalc =>
 
     // for some (java) BigDecimal calculations, we need a `MathContext` available
     implicit val mc: MathContext = MathContext.DECIMAL128
@@ -149,14 +149,17 @@ object CartService {
 
     val priceMode: PriceMode.Value = PriceMode.PRICE_GROSS
 
+    /** A simple implementation of the [[plus.coding.ckrecom.Product]] typeclass
+      */
+    implicit val productImpl = theProductImpl
+
     // here we define the cart lines for our articles.
     // we only need to define the lines containing product and quantity,
     // the `CartSystem` uses the default calculation logic (i.e. builds a `LineCalc` item
     // from the `Line`s).
-    override def buildCartLines: immutable.Seq[PriceLine[TaxCls]] = {
+    override def buildCartLines = {
       cartData.productItems map { item =>
-        val article = Article(item.product, item.product.price.cents)
-        PriceLine(article, item.qty)
+        PriceLine[TaxCls, Product](item.product, item.qty)
       }
     }
 
@@ -176,4 +179,5 @@ object CartService {
       discs.map { priceable => new FixedDiscountCalc[DefaultTaxClass](priceable, Data.taxRegular) }
     }
   }
+
 }

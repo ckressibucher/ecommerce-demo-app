@@ -36,6 +36,6 @@ package object model {
 
   case class ImgPath(url: String) extends AnyVal
 
-  case class Product(name: ProductName, price: Price, img: ImgPath, cat: Category, taxClass: TaxClassEnum)
+  case class Product(name: ProductName, price: Price, img: ImgPath, cat: Category, taxClassId: TaxClassEnum)
 
 }
