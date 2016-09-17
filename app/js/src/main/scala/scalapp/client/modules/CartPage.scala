@@ -1,18 +1,15 @@
 package scalapp.client.modules
 
-import scala.language.existentials
-
+import diode.data.Pot
 import diode.react.ReactConnectProxy
 import japgolly.scalajs.react.ReactComponentB
-
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
-import scalapp.client.Loc
-import scalapp.model.{ Category, Product }
-import diode.data.Pot
-import scalapp.client.DiodeDispatcher
-import scalapp.model.CartView
+
+import scala.language.existentials
+import scalapp.client.{DiodeDispatcher, Loc}
 import scalapp.client.components.CartViewComp
+import scalapp.model.CartView
 
 object CartPage {
 

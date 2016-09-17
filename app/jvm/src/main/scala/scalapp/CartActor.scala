@@ -1,8 +1,8 @@
 package scalapp
 
-import akka.actor.Actor
+import akka.actor.{Actor, Props}
+
 import scalapp.model._
-import akka.actor.Props
 
 object CartActor {
 

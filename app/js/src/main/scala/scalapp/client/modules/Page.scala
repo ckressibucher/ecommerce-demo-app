@@ -1,17 +1,17 @@
 package scalapp.client.modules
 
-import diode.{Action, ModelR}
 import diode.data.Pot
 import diode.react.ReactConnectProxy
-import japgolly.scalajs.react.{Callback, ReactComponentB, ReactElement}
+import diode.{Action, ModelR}
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.{Callback, ReactComponentB, ReactElement}
 
 import scala.language.existentials
 import scala.scalajs.js
 import scalapp.client.ReactHelper._
-import scalapp.client.{AppModel, CategoryModel, _}
 import scalapp.client.components.CartViewComp
+import scalapp.client.{AppModel, CategoryModel, _}
 import scalapp.model.{CartView, Category, Product}
 
 /** The main entry point for the "view"
@@ -94,7 +94,7 @@ object Page {
       case DashboardLoc   => DashboardView(p)
       case CategoryLoc(c) => categoryView(c)(p)
       case CartLoc        => CartView(p)
-      case unknown        => <.div("no page definition for this " + (unknown.toString()))
+      case unknown        => <.div("no page definition for this " + unknown.toString)
     })
     .build
 

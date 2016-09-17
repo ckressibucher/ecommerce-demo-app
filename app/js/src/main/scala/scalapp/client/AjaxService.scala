@@ -1,9 +1,9 @@
 package scalapp.client
 
-import autowire._
-import upickle.{ default => upick }
 import org.scalajs.dom
-import scalajs.concurrent.JSExecutionContext.Implicits.queue
+import upickle.{default => upick}
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object AjaxService extends autowire.Client[String, upick.Reader, upick.Writer] {
   override def doCall(req: Request) = {

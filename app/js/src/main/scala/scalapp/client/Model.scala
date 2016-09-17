@@ -1,8 +1,8 @@
 package scalapp.client
 
-import scalapp.model.{ Product, Category }
 import diode.data.Pot
-import scalapp.model.CartView
+
+import scalapp.model.{CartView, Category, Product}
 
 case class AppModel(categories: CategoryModel, products: ProductModel, cartView: Pot[CartView])
 

@@ -1,30 +1,19 @@
 package scalapp
 
+import diode.ModelR
+import diode.data.Pot
+import diode.react.ReactConnectProxy
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.StaticDsl.Route
+import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Router, RouterConfig, RouterConfigDsl, RouterCtl}
+import org.scalajs.dom
+
 import scala.language.postfixOps
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
-import org.scalajs.dom
-import autowire._
-import diode.react.ReactConnectProxy
-import diode.react.ReactPot._
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.extra.router.{BaseUrl, Redirect, Resolution, Router, RouterConfigDsl, RouterCtl}
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import scalapp.client.AppCircuit
-import scalapp.client.CategoryModel
-import scalapp.client.modules.Dashboard
-import scalapp.model.{Category, Product}
-import japgolly.scalajs.react.extra.router.StaticDsl.RouteB
-import diode.{ModelR, RootModelR}
-import diode.data.Pot
-import japgolly.scalajs.react.extra.router.RouterConfig
-
-import scalapp.client._
+import scalapp.client.{AppCircuit, CategoryModel, _}
 import scalapp.client.modules.Page
-import japgolly.scalajs.react.extra.router.StaticDsl.Route
-
-import scalapp.model.CartView
+import scalapp.model.{CartView, Category, Product}
 
 @JSExport
 object Client extends js.JSApp {
@@ -52,7 +41,7 @@ object Client extends js.JSApp {
   val components = Page.Components(catsList, productsList, cartView)
   val dispatch = (a: diode.Action) => Callback { AppCircuit.dispatch(a) }
 
-  AppCircuit.subscribe(AppCircuit.zoom(identity _)) { model: ModelR[AppModel, AppModel] =>
+  AppCircuit.subscribe(AppCircuit.zoom(identity)) { model: ModelR[AppModel, AppModel] =>
     println("debug: updated model:")
     println(model.value.cartView)
   }
@@ -64,9 +53,9 @@ object Client extends js.JSApp {
     import dsl._
 
     def reactRouterRenderer(page: Loc, r: RouterCtl[Loc]) =
-      Page.render(AppCircuit.zoom(identity _), page, components, dispatch, r)
+      Page.render(AppCircuit.zoom(identity), page, components, dispatch, r)
 
-    def commonAction = dynRenderR(reactRouterRenderer _)
+    def commonAction = dynRenderR(reactRouterRenderer)
 
     // wrap/connect components to the circuit
     def staticToDynamicRoute(r: Route[Unit], page: Loc) = {

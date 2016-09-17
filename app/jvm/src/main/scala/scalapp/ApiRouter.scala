@@ -12,7 +12,7 @@ class ApiRouter extends Actor {
   val apiImpl = new ApiImpl(cartFactory)
 
   def receive = {
-    case Request(segments, args) => {
+    case Request(segments, args) =>
       // get a handle to the sender ActorRef
       val sdr = sender()
       val f = Router.route[Api](apiImpl) {
@@ -25,7 +25,6 @@ class ApiRouter extends Actor {
         // TODO how to handle failure?
         case y => println(y)
       }
-    }
   }
 }
 

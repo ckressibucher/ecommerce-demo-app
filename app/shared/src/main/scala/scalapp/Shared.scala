@@ -1,8 +1,7 @@
 package scalapp
 
-import scalapp.model.{ Product, Category }
 import scala.concurrent.Future
-import scalapp.model.CartView
+import scalapp.model.{CartView, Category, Product}
 
 case class FileData(name: String, size: Long)
 

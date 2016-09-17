@@ -1,20 +1,15 @@
 package scalapp.client.modules
 
-import scala.language.existentials
-
+import diode.data.Pot
 import diode.react.ReactConnectProxy
 import japgolly.scalajs.react.ReactComponentB
-
 import japgolly.scalajs.react.extra.router.RouterCtl
 import japgolly.scalajs.react.vdom.prefix_<^._
-import scalapp.client.CategoryModel
-import scalapp.client.Loc
-import scalapp.client.ProductModel
-import scalapp.model.{ Category, Product }
-import scalapp.client.components.CategoryList
-import scalapp.client.components.ProductsList
-import diode.data.Pot
-import scalapp.client.DiodeDispatcher
+
+import scala.language.existentials
+import scalapp.client.{CategoryModel, DiodeDispatcher, Loc}
+import scalapp.client.components.{CategoryList, ProductsList}
+import scalapp.model.{Category, Product}
 
 /** Show the category list and the products of the current category
   */

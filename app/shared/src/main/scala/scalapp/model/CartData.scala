@@ -46,7 +46,7 @@ case class CartData(productItems: List[CartItem], discounts: List[String]) {
 
   def qtyByProduct(product: Product): Int = productItems.find(_.product.name == product.name) match {
     case Some(CartItem(_, q)) => q
-    case None                 => println(s"product ${product.name} not found. products: ${productItems}"); 0
+    case None                 => println(s"product ${product.name} not found. products: $productItems"); 0
   }
 
 }

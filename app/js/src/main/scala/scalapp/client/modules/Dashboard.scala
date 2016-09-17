@@ -1,19 +1,15 @@
 package scalapp.client.modules
 
-import japgolly.scalajs.react.extra.router.RouterCtl
-import scalapp.client.Loc
-import diode.react.ModelProxy
-import scalapp.client.CategoryModel
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.vdom.prefix_<^._
-import diode.react.ReactConnectProxy
-import scalapp.client.components.CategoryList
-import scala.language.existentials
 import diode.data.Pot
+import diode.react.ReactConnectProxy
+import japgolly.scalajs.react.ReactComponentB
+import japgolly.scalajs.react.extra.router.RouterCtl
+import japgolly.scalajs.react.vdom.prefix_<^._
+
+import scala.language.existentials
+import scalapp.client.{CategoryModel, DiodeDispatcher, Loc}
+import scalapp.client.components.{CategoryList, ProductsList}
 import scalapp.model.Product
-import scalapp.client.components.ProductsList
-import scalapp.client.DiodeDispatcher
-import scalapp.client.DiodeDispatcher
 
 object Dashboard {
 

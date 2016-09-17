@@ -1,7 +1,6 @@
 package scalapp.client
 
-import japgolly.scalajs.react.SyntheticEvent
-import japgolly.scalajs.react.Callback
+import japgolly.scalajs.react.{Callback, SyntheticEvent}
 
 object ReactHelper {
   /** Composes a router callback (which needs an input event) with another callback.

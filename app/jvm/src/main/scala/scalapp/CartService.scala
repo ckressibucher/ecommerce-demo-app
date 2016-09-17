@@ -1,20 +1,17 @@
 package scalapp
 
-import scalapp.model.{CartData, Price, Product, TaxReduced, TaxRegular}
-import scalapp.jvm.Data
-import plus.coding.ckrecom.{CartContentItem, CartItemCalculator, TaxSystem}
-import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
-import plus.coding.ckrecom.impl.FixedDiscountCalc
-import plus.coding.ckrecom.{Product => EcmProduct}
 import java.math.{BigDecimal, MathContext}
 
 import plus.coding.ckrecom.Product.ProductOps
 import plus.coding.ckrecom.TaxSystem.DefaultTaxClass
-import plus.coding.ckrecom.{CartBase, CartSystem, PriceMode}
+import plus.coding.ckrecom.impl.FixedDiscountCalc
+import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
+import plus.coding.ckrecom.{CartBase, CartContentItem, CartItemCalculator, CartSystem, PriceMode, TaxSystem, Product => EcmProduct}
 
 import scala.collection.immutable
 import scala.util.Try
-import scalapp.model.CartView
+import scalapp.jvm.Data
+import scalapp.model._
 
 /** Used to calculate a given cart ([[CartData]]) and return the result
   * as [[CartView]]
@@ -56,10 +53,9 @@ object CartService {
     val system = new CartCalculation(cartData)
     system.run match {
       case Right(c) => mapCartResultToCartView(c)
-      case Left(errs) => {
+      case Left(errs) =>
         val msg = "The cart could not be calculated successfully. Errors: " + errs.mkString("; ")
         Left(msg)
-      }
     }
   }
 
@@ -72,7 +68,7 @@ object CartService {
           case e@Left(err) => e
           case Right(priceMap) if priceMap.size > 1 => Left("Unexpected result: more than one tax class")
           case Right(priceMap) if priceMap.size < 1 => Left("Unexpected result: no prices")
-          case Right(priceMap) => {
+          case Right(priceMap) =>
             implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
             val priceSum = priceMap.values.sum
             val taxClass = priceMap.keys.head
@@ -80,7 +76,6 @@ object CartService {
             val tc = articleP.taxClass
             val taxClsStr = Data.taxClassString(tc)
             Right(CartView.Line(articleP, qty.intValue(), Price(priceSum), taxClsStr))
-          }
         }
     }
     val discounts = result.contents.collect {
@@ -88,12 +83,11 @@ object CartService {
         case e@Left(_) => e
         case Right(priceMap) if priceMap.size < 1 => Left("err")
         case Right(priceMap) if priceMap.size > 1 => Left("err")
-        case Right(priceMap) => {
+        case Right(priceMap) =>
           implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
           val (taxCls, p) = (priceMap.keys.head, priceMap.values.head)
           val taxClsStr = Data.taxClassString(taxCls)
           Right(CartView.Discount(code, Price(p), taxClsStr))
-        }
       }
     }
     if (lines.count(_.isLeft) > 0 || discounts.count(_.isLeft) > 0) {
@@ -111,11 +105,10 @@ object CartService {
         case Right(d: CartView.Discount) => d
       }
       val taxLines = result.taxes(java.math.RoundingMode.HALF_UP) map {
-        case (taxClass: TaxCls, value) => {
+        case (taxClass: TaxCls, value) =>
           val taxRate = theTaxSystem.rate(taxClass)
           val taxRateAsDouble = taxRate.num.doubleValue() / taxRate.denom.doubleValue()
           CartView.TaxLine(taxClass.toString, taxRateAsDouble, Price(value))
-        }
       }
       val taxTotal = taxLines.foldLeft(0L) {
         case (total, item) => total + item.sum.cents

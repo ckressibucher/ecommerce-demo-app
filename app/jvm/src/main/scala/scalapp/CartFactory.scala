@@ -1,13 +1,10 @@
 package scalapp
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import akka.pattern.ask
-import akka.actor.ActorRef
-
-import scala.concurrent.duration._
 import akka.util.Timeout
 
-import scala.util.{Failure, Success}
+import scala.concurrent.duration._
 
 /** Manages cart actors
   */

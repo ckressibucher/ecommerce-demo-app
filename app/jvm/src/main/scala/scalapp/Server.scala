@@ -1,20 +1,18 @@
 package scalapp
 
-import akka.actor.{ ActorSystem, Props }
-import akka.pattern.ask
-import akka.util.Timeout
-import scala.concurrent.duration._
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
-import scala.collection.immutable.Seq
-import upickle.default.{ Reader, Writer }
-import upickle.{ default => upick }
-import scala.io.StdIn
-import akka.http.scaladsl.model.HttpEntity.Strict
+import akka.util.Timeout
+import upickle.default.{Reader, Writer}
+import upickle.{default => upick}
+
 import scala.concurrent.Future
-import akka.http.scaladsl.server.Directive
+import scala.concurrent.duration._
+import scala.io.StdIn
 
 object Router extends autowire.Server[String, Reader, Writer] {
   def read[Result: Reader](p: String) = upick.read[Result](p)

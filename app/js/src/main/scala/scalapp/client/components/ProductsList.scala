@@ -1,19 +1,14 @@
 package scalapp.client.components
 
-import diode.react.ModelProxy
-
-import diode.data.Pot
-import scalapp.model.{ Product, Category }
-import scalapp.client.UpdateProducts
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactNode
-import diode.react.ReactPot._
-import scalapp.model.Price
 import diode.Action
-import scalapp.client.AddProduct
-import scalapp.client.DiodeDispatcher
+import diode.data.Pot
+import diode.react.ModelProxy
+import diode.react.ReactPot._
+import japgolly.scalajs.react.{Callback, ReactComponentB, ReactNode}
+import japgolly.scalajs.react.vdom.prefix_<^._
+
+import scalapp.client.{AddProduct, DiodeDispatcher, UpdateProducts}
+import scalapp.model.Product
 
 object ProductsList {
 

@@ -4,8 +4,8 @@ import diode.data.Pot
 import diode.react.ModelProxy
 import diode.react.ReactPot._
 import japgolly.scalajs.react.extra.router.RouterCtl
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactEventAliases}
 import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB, ReactEventAliases}
 import org.scalajs.dom.ext.KeyCode
 
 import scala.util.Try

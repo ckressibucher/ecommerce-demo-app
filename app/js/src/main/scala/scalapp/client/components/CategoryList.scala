@@ -1,17 +1,14 @@
 package scalapp.client.components
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.prefix_<^._
-import diode.react._
 import diode.react.ReactPot._
-import scalapp.client._
-import scalapp.model._
-import diode.Dispatcher
+import diode.react._
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.RouterCtl
-import scalapp.client.Loc
-import scalapp.client.CategoryLoc
-import scalapp.client.DashboardLoc
+import japgolly.scalajs.react.vdom.prefix_<^._
+
 import scalapp.client.ReactHelper._
+import scalapp.client.{CategoryLoc, DashboardLoc, Loc, _}
+import scalapp.model._
 
 object CategoryList {
 
@@ -27,7 +24,7 @@ object CategoryList {
     .build
 
   def renderCat(cat: Category, current: Option[Category], onClick: TagMod): ReactNode = {
-    val props = ItemProps(cat, current.filter(_ == cat).isDefined, onClick)
+    val props = ItemProps(cat, current.exists(_ == cat), onClick)
     CategoryItem.withKey(cat.name)(props)
   }
 

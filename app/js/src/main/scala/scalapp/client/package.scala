@@ -1,8 +1,9 @@
 package scalapp
 
-import scalapp.model._
 import diode.Action
 import japgolly.scalajs.react.Callback
+
+import scalapp.model._
 
 package object client {
 
