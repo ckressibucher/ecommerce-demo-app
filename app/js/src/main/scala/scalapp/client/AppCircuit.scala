@@ -75,7 +75,7 @@ class CartHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(m
       val effect = handleAjaxResult(AjaxService[Api].deleteFromCart("session", product.name.name).call(), interimState)
       updated(interimState, effect)
     case UpdateProductQty(product: Product, qty: Int) =>
-      if (value.isReady) {
+      if (!value.isEmpty) {
         val oldQty = value.get.qtyByProduct(product)
         val diffQty = qty - oldQty
         val interimState = value.pending()
