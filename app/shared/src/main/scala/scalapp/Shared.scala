@@ -32,5 +32,7 @@ trait Api {
 
   def applyDiscount(sessId: String, code: String): Future[UpdateResult]
 
+  def removeDiscount(sessId: String, code: String): Future[UpdateResult]
+
   def showCart(sessId: String): Future[UpdateResult]
 }

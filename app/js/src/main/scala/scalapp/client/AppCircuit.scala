@@ -93,6 +93,10 @@ class CartHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(m
       val interimState = value.pending()
       updated(interimState,
         handleAjaxResult(AjaxService[Api].applyDiscount("session", code).call(), interimState))
+    case RemoveDiscount(code) =>
+      val interimState = value.pending()
+      updated(interimState,
+        handleAjaxResult(AjaxService[Api].removeDiscount("session", code).call(), interimState))
   }
 }
 

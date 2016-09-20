@@ -18,6 +18,8 @@ object CartActor {
 
   case class ApplyDiscount(code: String) extends Msg
 
+  case class RemoveDiscount(code: String) extends Msg
+
   // the result type of cart update actions (a message returned to the sender)
   case class CartUpdateResult(either: Either[String, CartView])
 
@@ -47,6 +49,10 @@ class CartActor(var cart: CartData) extends Actor {
         // don't update cart
         sender() ! CartUpdateResult(Left(result.left.get))
       }
+    case RemoveDiscount(code) =>
+      cart = cart.removeDiscount(code)
+      sender() ! CartUpdateResult(CartService.caluclateCart(cart))
+
     case GetCartView =>
       sender() ! CartUpdateResult(CartService.caluclateCart(cart))
   }

@@ -187,7 +187,10 @@ object CartViewComp extends ReactEventAliases {
                   <.td(PriceBox.PriceBox(d.amount)),
                   <.td(d.taxClass),
                   <.td(PriceBox.PriceBox(d.amount)),
-                  <.td(<.button("remove TODO")))
+                  <.td(
+                    <.button(
+                      ^.onClick --> p.dispatcher(RemoveDiscount(d.code)),
+                      "(x)")))
               }
             )),
           CartTotals(cartView),

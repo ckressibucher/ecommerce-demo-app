@@ -27,6 +27,9 @@ case class CartData(productItems: List[CartItem], discounts: List[String]) {
       Left(s"Discount code '$code' is not valid")
   }
 
+  def removeDiscount(code: String): CartData =
+    copy(discounts = discounts.filterNot(_ == code))
+
   /** Directly set the new quantity of the product */
   def updateProductQty(product: Product, newQty: Int): CartData = {
     val newItems = if (productItems.exists(_.product.name.name == product.name.name)) {
