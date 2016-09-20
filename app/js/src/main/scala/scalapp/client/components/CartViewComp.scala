@@ -84,7 +84,9 @@ object CartViewComp extends ReactEventAliases {
 
   val TotalsLine = ReactComponentB[CartViewModel.TaxLine]("cart-totals-line")
     .render_P(line => <.tr(
-      <.td(line.cls), <.td(line.rate), <.td(PriceBox.PriceBox(line.sum))
+      <.td(line.cls, " ", line.rate, "%"),
+      <.td(PriceBox.PriceBox(line.totalSum)),
+      <.td(PriceBox.PriceBox(line.taxAmount))
     ))
     .build
 

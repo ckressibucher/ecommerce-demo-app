@@ -6,7 +6,7 @@ import plus.coding.ckrecom.Product.ProductOps
 import plus.coding.ckrecom.TaxSystem.DefaultTaxClass
 import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
-import plus.coding.ckrecom.{CartBase, CartContentItem, CartItemCalculator, CartSystem, PriceMode, TaxSystem, Product => EcmProduct}
+import plus.coding.ckrecom.{Cart, CartBase, CartContentItem, CartItemCalculator, CartSystem, PriceMode, TaxSystem, Product => EcmProduct}
 
 import scala.collection.immutable
 import scala.util.Try
@@ -63,7 +63,7 @@ object CartService {
   def mapCartResultToCartView(result: CartBase[TaxCls]): Either[String, CartView] = {
     implicit val productImpl = theProductImpl
     val lines = result.contents.collect {
-      case CartContentItem(PriceLine(article, qty), prices) =>
+      case CartContentItem(PriceLine(article, qty), prices, _) =>
         prices match {
           case e@Left(err) => e
           case Right(priceMap) if priceMap.size > 1 => Left("Unexpected result: more than one tax class")
@@ -79,7 +79,7 @@ object CartService {
         }
     }
     val discounts = result.contents.collect {
-      case CartContentItem(FixedDiscount(code, amount), prices) => prices match {
+      case CartContentItem(FixedDiscount(code, amount), prices, _) => prices match {
         case e@Left(_) => e
         case Right(priceMap) if priceMap.size < 1 => Left("err")
         case Right(priceMap) if priceMap.size > 1 => Left("err")
@@ -105,22 +105,20 @@ object CartService {
         case Right(d: CartView.Discount) => d
       }
       val taxLines = result.taxes(java.math.RoundingMode.HALF_UP) map {
-        case (taxClass: TaxCls, value) =>
+        case (taxClass: TaxCls, Cart.TaxClassSumAndTaxAmount(sum, taxAmnt)) =>
           val taxRate = theTaxSystem.rate(taxClass)
           val taxRateAsDouble = taxRate.num.doubleValue() / taxRate.denom.doubleValue()
-          CartView.TaxLine(taxClass.toString, taxRateAsDouble, Price(value))
+          val taxClsLabel = taxClass match {
+            case Data.taxRegular => TaxRegular.tc
+            case Data.taxReduced => TaxReduced.tc
+            case unknown => unknown.toString
+          }
+          CartView.TaxLine(taxClsLabel, taxRateAsDouble, Price(sum), Price(taxAmnt))
       }
-      val taxTotal = taxLines.foldLeft(0L) {
-        case (total, item) => total + item.sum.cents
-      }
+      val taxTotal = result.taxSum()
       val sumLines = okLines.foldLeft(0L) {
         case (lineTotal, ln) => lineTotal + ln.price.cents
       }
-      // TODO use CartBase result instead??
-      //val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
-      //  sumLines
-      //else
-      //  taxTotal + sumLines
       val grandTotal = result.grandTotal()
       Right(CartView(okLines, okDiscounts, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
     }
