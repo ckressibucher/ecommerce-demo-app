@@ -153,14 +153,11 @@ object CartViewComp extends ReactEventAliases {
     .renderBackend[DiscountFormBackend]
     .build
 
-  // TODO message component, with internal state (if message has been closed already)
   def renderCart(p: Props) = {
     println(p.proxy.value.state)
     <.div(
     p.proxy.value.renderFailed(err =>
-      <.div(^.className := "message error",
-        <.button("x"),
-        <.div(err.getMessage))),
+      UserMessage(err.getMessage, UserMessage.Level.Error)),
     p.proxy.value.render(cartView => {
       if (cartView.lines.isEmpty) {
         <.p("Your cart is empty.")

@@ -54,8 +54,7 @@ object Page {
 
           <.div(^.className := "menu",
             props.cartComp(CartViewComp.minicart(_, props.router))),
-        <.div(^.className := "spacer-afternav", " "),
-        <.div(^.className := "breadcrumb", props.page.toString))))
+        <.div(^.className := "spacer-afternav", " "))))
     .build
 
   val Footer = ReactComponentB[Unit]("footer")

@@ -57,13 +57,18 @@ button.remove {
 
 .message {
   width: 100%;
+  padding: 0.2em;
   display: inline-block;
 }
 .message button {
   float: right;
-  width: 3em;
+  width: 8em;
 }
 .message.error {
   color: white;
   background-color: #ff4136;
+}
+
+.no-display {
+  display: none;
 }
