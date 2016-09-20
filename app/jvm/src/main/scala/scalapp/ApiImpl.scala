@@ -7,10 +7,13 @@ import akka.util.Timeout
 import scala.concurrent.Future.successful
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
+import scalapp.CartActor.CartUpdateResult
 import scalapp.CartFactory.CartFacadeAction
 import scalapp.model._
 
 class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) extends Api {
+
   import scalapp.jvm.Data._
 
   implicit val timeout = Timeout(2.seconds)
@@ -25,10 +28,10 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     */
   def products(category: Option[Category]): Future[Seq[Product]] = category match {
     case Some(c) => successful(dummyProducts.filterNot(_.cat == c))
-    case None    => successful(dummyProducts)
+    case None => successful(dummyProducts)
   }
 
-  def addToCart(sessId: String, productName: String, qty: Int): Future[CartView] =
+  def addToCart(sessId: String, productName: String, qty: Int): Future[UpdateResult] =
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.AddToCart(p, qty))
@@ -36,7 +39,7 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
-  def deleteFromCart(sessId: String, productName: String): Future[CartView] =
+  def deleteFromCart(sessId: String, productName: String): Future[UpdateResult] =
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.DeleteProduct(p))
@@ -44,25 +47,23 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
-  def clearCart(sessId: String): Future[CartView] = {
-    cartFactory ! CartFacadeAction(sessId, CartActor.ClearCart)
-    getCartView(sessId)
+  def clearCart(sessId: String): Future[UpdateResult] = {
+    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.ClearCart))
   }
 
-  def applyDiscount(sessId: String, code: String): Future[CartView] = {
-    cartFactory ! CartFacadeAction(sessId, CartActor.ApplyDiscount(code))
-    getCartView(sessId)
-  }
+  def applyDiscount(sessId: String, code: String): Future[UpdateResult] =
+    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.ApplyDiscount(code)))
 
-  def showCart(sessId: String): Future[CartView] =
+  def showCart(sessId: String): Future[UpdateResult] =
     getCartView(sessId)
 
   private def getCartView(sessId: String) =
     mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.GetCartView))
 
-  // `Any` should be `Either[String, CartView]`
-  private def mapToCartView(result: Future[Any]): Future[CartView] = result.flatMap {
-    case Right(cartView) => Future.successful(cartView.asInstanceOf[CartView])
-    case Left(err: String) => Future.failed(new RuntimeException(err))
+  // `Any` should be `Future[CartUpdateResult]`
+  private def mapToCartView(result: Future[Any]): Future[UpdateResult] = result.flatMap {
+    case Success(CartUpdateResult(cartViewResult)) => Future.successful(cartViewResult)
+    //case failAction => Future.failed(ActionFailedMsg("Server error"))
+    case failAction => println("\nerror:\n"); println(failAction); println("\n\n"); Future.failed(ActionFailedMsg("Server error"))
   }
 }

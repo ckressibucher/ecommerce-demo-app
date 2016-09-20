@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import scala.concurrent.duration._
+import scala.util.Success
 
 /** Manages cart actors
   */
@@ -18,14 +19,11 @@ class CartFactory extends Actor {
   implicit val excCtxt = context.system.dispatcher
 
   def receive = {
-    case CartFacadeAction(sessId, msg @ CartActor.GetCartView) =>
-      // respond to sender on `GetCartView` actions only
-      val sdr = sender()
-      (cartBySession(sessId) ? msg).onSuccess {
-        case cartView => sdr ! cartView
-      }
     case CartFacadeAction(sessId, msg) =>
-      cartBySession(sessId) ! msg
+      val sdr = sender()
+      (cartBySession(sessId) ? msg).onComplete { futureResult =>
+        sdr ! futureResult
+      }
   }
 
   def cartBySession(id: String): ActorRef = _cart // ignore session for now...

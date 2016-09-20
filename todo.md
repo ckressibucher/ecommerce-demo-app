@@ -1,4 +1,4 @@
-* integrate discount
+* integrate discount (wip: todo: send callback from react component)
 * implement session, to identify cart
 * akka persistence for carts
 * store products to database

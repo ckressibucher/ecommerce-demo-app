@@ -35,7 +35,7 @@ object CartViewComp extends ReactEventAliases {
       qty <- $.state
     } yield props.dp(UpdateProductQty(props.product, qty))).flatten
 
-    def handleKeyPress(e: ReactKeyboardEvent): Callback = {
+    def handleKeyPress(e: ReactKeyboardEventI): Callback = {
       if (e.which == KeyCode.Enter) fire
       else Callback.empty
     }
@@ -112,17 +112,40 @@ object CartViewComp extends ReactEventAliases {
     })
     .build
 
-  val DiscountForm = ReactComponentB[Props]("discount-form")
-    .render_P(p =>
+  class DiscountFormBackend($: BackendScope[Props, String]) {
+    def handleChange(e: ReactEventI): Callback = {
+      Try(e.target.value).map { v: String =>
+        $.setState(v)
+      }.toOption.getOrElse(Callback.empty)
+    }
+
+    def applyDiscount: Callback = (for {
+      props <- $.props
+      discountCode <- $.state
+    } yield props.dispatcher(ApplyDiscount(discountCode))).flatten
+
+    def handleKeyPress(e: ReactKeyboardEventI): Callback = {
+      if (e.which == KeyCode.Enter) applyDiscount
+      else Callback.empty
+    }
+
+    def render(state: String) =
       <.div(^.className := "discount-code",
+        <.h2("Apply a dicount"),
+        <.div("to add a discount, enter a code of the form ", <.code("demo-<number-of-cents>")),
         <.input(^.`type` := "text",
-          ^.defaultValue := "discount-code",
-          ^.onKeyPress --> Callback.empty // TODO send on enter
+          ^.defaultValue := state,
+          ^.onChange ==> handleChange,
+          ^.onKeyPress ==> handleKeyPress
         ),
-        <.button(^.onClick --> Callback.empty,
+        <.button(^.onClick --> applyDiscount,
           "Apply discount")
       )
-    )
+  }
+
+  val DiscountForm = ReactComponentB[Props]("discount-form")
+    .initialState("discount code...")
+    .renderBackend[DiscountFormBackend]
     .build
 
   def renderCart(p: Props) = {

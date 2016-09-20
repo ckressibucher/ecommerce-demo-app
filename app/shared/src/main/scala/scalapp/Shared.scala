@@ -5,7 +5,13 @@ import scalapp.model.{CartView, Category, Product}
 
 case class FileData(name: String, size: Long)
 
+// User message to send from the server side to the client side, in case something went wrong
+case class ActionFailedMsg(msg: String) extends Exception(msg)
+
 trait Api {
+  // to inform sender about the update result
+  type UpdateResult = Either[String, CartView]
+
   /** Returns all categories
     *
     * Important: must have parenthesis for autowire to work!
@@ -18,13 +24,13 @@ trait Api {
 
   /** Returns `Some` error message in case of failure, `None` in case of success.
     */
-  def addToCart(sessId: String, productName: String, qty: Int): Future[CartView]
+  def addToCart(sessId: String, productName: String, qty: Int): Future[UpdateResult]
 
-  def deleteFromCart(sessId: String, productName: String): Future[CartView]
+  def deleteFromCart(sessId: String, productName: String): Future[UpdateResult]
 
-  def clearCart(sessId: String): Future[CartView]
+  def clearCart(sessId: String): Future[UpdateResult]
 
-  def applyDiscount(sessId: String, code: String): Future[CartView]
+  def applyDiscount(sessId: String, code: String): Future[UpdateResult]
 
-  def showCart(sessId: String): Future[CartView]
+  def showCart(sessId: String): Future[UpdateResult]
 }

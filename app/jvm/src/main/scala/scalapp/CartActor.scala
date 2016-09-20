@@ -1,12 +1,11 @@
 package scalapp
 
 import akka.actor.{Actor, Props}
-
+import akka.pattern.ask
 import scalapp.model._
 
 object CartActor {
 
-  // Message protocol
   sealed trait Msg
 
   case class AddToCart(product: Product, qty: Int) extends Msg
@@ -19,6 +18,9 @@ object CartActor {
 
   case class ApplyDiscount(code: String) extends Msg
 
+  // the result type of cart update actions (a message returned to the sender)
+  case class CartUpdateResult(either: Either[String, CartView])
+
   def props = Props(new CartActor(CartData.empty))
 }
 
@@ -29,14 +31,23 @@ class CartActor(var cart: CartData) extends Actor {
   def receive = {
     case AddToCart(product, qty) =>
       cart = cart.addProduct(product, qty)
+      sender() ! CartUpdateResult(CartService.caluclateCart(cart))
     case DeleteProduct(product) =>
       cart = cart.deleteProduct(product)
+      sender() ! CartUpdateResult(CartService.caluclateCart(cart))
     case ClearCart =>
       cart = CartData.empty
+      sender() ! CartUpdateResult(CartService.caluclateCart(cart))
     case ApplyDiscount(code) =>
-      cart = cart.addDiscount(code)
+      val result = cart.addDiscount(code)
+      if (result.isRight) {
+        cart = result.right.get
+        sender() ! CartUpdateResult(CartService.caluclateCart(cart))
+      } else {
+        // don't update cart
+        sender() ! CartUpdateResult(Left(result.left.get))
+      }
     case GetCartView =>
-      val result = CartService.caluclateCart(cart)
-      sender() ! result
+      sender() ! CartUpdateResult(CartService.caluclateCart(cart))
   }
 }

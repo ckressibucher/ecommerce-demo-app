@@ -9,7 +9,8 @@ import diode.react.ReactConnector
 import scala.concurrent.Future
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.scalajs.js
-import scalapp.Api
+import scala.util.Success
+import scalapp.{ActionFailedMsg, Api}
 import scalapp.model.{CartView, Product}
 
 object AppCircuit extends Circuit[AppModel] with ReactConnector[AppModel] {
@@ -46,8 +47,9 @@ class InitHandler[M](modelRW: ModelRW[M, AppModel]) extends ActionHandler(modelR
 
   override def handle = {
     case InitializeApp =>
-      val effect = Effect[Action](AjaxService[Api].showCart("session").call().map { cartViewResult =>
-        UpdateCartView(Ready(cartViewResult))
+      val effect = Effect[Action](AjaxService[Api].showCart("session").call().map {
+        case Right(cartViewResult) => UpdateCartView(Ready(cartViewResult))
+        case Left(err) => UpdateCartView(diode.data.Failed(ActionFailedMsg(err)))
       })
       effectOnly(effect)
   }
@@ -57,33 +59,40 @@ class CartHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(m
 
   val console = js.Dynamic.global.console
 
-  def handleAjaxResult(effect: => Future[CartView]): Effect =
-    Effect[Action](effect.map { result =>
-      UpdateCartView(Ready[CartView](result))
+  def handleAjaxResult(effect: => Future[Either[String, CartView]], prevVal: Pot[CartView]): Effect =
+    Effect[Action](effect.map {
+      case Right(result) => UpdateCartView(prevVal.ready(result))
+      case Left(err) => UpdateCartView(prevVal.fail(ActionFailedMsg(err)))
     })
 
   override def handle = {
-    case AddProduct(product: Product, qty: Int) => {
-      val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, qty).call())
-      effectOnly(effect)
-    }
-    case RemoveProduct(product: Product) => {
-      val effect = handleAjaxResult(AjaxService[Api].deleteFromCart("session", product.name.name).call())
-      effectOnly(effect)
-    }
-    case UpdateProductQty(product: Product, qty: Int) => {
+    case AddProduct(product: Product, qty: Int) =>
+      val interimState = value.pending()
+      val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, qty).call(), interimState)
+      updated(interimState, effect)
+    case RemoveProduct(product: Product) =>
+      val interimState = value.pending()
+      val effect = handleAjaxResult(AjaxService[Api].deleteFromCart("session", product.name.name).call(), interimState)
+      updated(interimState, effect)
+    case UpdateProductQty(product: Product, qty: Int) =>
       if (value.isReady) {
         val oldQty = value.get.qtyByProduct(product)
         val diffQty = qty - oldQty
-        val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call())
-        effectOnly(effect)
+        val interimState = value.pending()
+        val effect = handleAjaxResult(AjaxService[Api].addToCart("session", product.name.name, diffQty).call(), interimState)
+        updated(interimState, effect)
       } else {
         console.warn("cart is not ready yet, update action is dropped...")
         noChange
       }
-    }
-    case ClearCart => effectOnly(
-      handleAjaxResult(AjaxService[Api].clearCart("session").call()))
+    case ClearCart =>
+      val interimState = value.pending()
+      updated(interimState,
+        handleAjaxResult(AjaxService[Api].clearCart("session").call(), interimState))
+    case ApplyDiscount(code) =>
+      val interimState = value.pending()
+      updated(interimState,
+        handleAjaxResult(AjaxService[Api].applyDiscount("session", code).call(), interimState))
   }
 }
 
@@ -99,7 +108,10 @@ class ProductHandler[M](modelRW: ModelRW[M, Pot[Seq[Product]]]) extends ActionHa
 class CartViewHandler[M](modelRW: ModelRW[M, Pot[CartView]]) extends ActionHandler(modelRW) {
   override def handle = {
     case action: UpdateCartView => {
-      val updateF = action.effect(AjaxService[Api].showCart("session").call())(identity _)
+      val updateF = action.effect(AjaxService[Api].showCart("session").call().flatMap {
+        case Right(cartView) => Future.successful(cartView)
+        case Left(err) => Future.failed(ActionFailedMsg(err))
+      })(identity _)
       action.handleWith(this, updateF)(PotAction.handler())
     }
   }

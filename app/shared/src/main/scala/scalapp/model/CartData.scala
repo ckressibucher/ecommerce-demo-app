@@ -2,6 +2,8 @@ package scalapp.model
 
 case class CartData(productItems: List[CartItem], discounts: List[String]) {
 
+  private val discountPattern = """^demo-(\d+)$""".r
+
   /** change the quantity of the given product by `diffQty`
     *
     * @param product The product
@@ -16,13 +18,13 @@ case class CartData(productItems: List[CartItem], discounts: List[String]) {
   /** Alias for `updateProduct` */
   def addProduct(product: Product, qty: Int): CartData = updateProduct(product, qty)
 
-  def addDiscount(code: String): CartData = {
-    val newDiscs = if (discounts.contains(code))
-      discounts
-    else {
-      discounts :+ code
-    }
-    copy(discounts = newDiscs)
+  def addDiscount(code: String): Either[String, CartData] = {
+    if (discounts.contains(code))
+      Left(s"Discount '$code' already exists in this cart")
+    else if (discountPattern.findFirstIn(code).isDefined)
+      Right(copy(discounts = discounts :+ code))
+    else
+      Left(s"Discount code '$code' is not valid")
   }
 
   /** Directly set the new quantity of the product */
