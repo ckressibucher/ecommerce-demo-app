@@ -8,9 +8,10 @@ import scalapp.model.Price
 object PriceBox {
   val PriceBox = ReactComponentB[Price]("price-box")
     .render_P(price => {
-      val (main, c) = price.divMod
+      val prefix = if (price.cents < 0) "-" else ""
+      val (main, c) = price.divModAbs
       <.div(^.className := "price-box",
-        <.span(^.className := "price-value", main + "." + "%02d".format(c)),
+        <.span(^.className := "price-value", s"$prefix$main.${"%02d".format(c)}"),
         " ",
         <.span(^.className := "price-currency", "Euro"))
     })

@@ -55,3 +55,15 @@ button.remove {
   float: right;
 }
 
+.message {
+  width: 100%;
+  display: inline-block;
+}
+.message button {
+  float: right;
+  width: 3em;
+}
+.message.error {
+  color: white;
+  background-color: #ff4136;
+}

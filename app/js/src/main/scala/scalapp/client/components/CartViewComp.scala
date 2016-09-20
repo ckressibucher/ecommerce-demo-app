@@ -113,6 +113,9 @@ object CartViewComp extends ReactEventAliases {
     .build
 
   class DiscountFormBackend($: BackendScope[Props, String]) {
+
+    val placeholderVal = "discount code..."
+
     def handleChange(e: ReactEventI): Callback = {
       Try(e.target.value).map { v: String =>
         $.setState(v)
@@ -129,26 +132,35 @@ object CartViewComp extends ReactEventAliases {
       else Callback.empty
     }
 
-    def render(state: String) =
+    def render(state: String) = {
       <.div(^.className := "discount-code",
         <.h2("Apply a dicount"),
         <.div("to add a discount, enter a code of the form ", <.code("demo-<number-of-cents>")),
         <.input(^.`type` := "text",
           ^.defaultValue := state,
-          ^.onChange ==> handleChange,
-          ^.onKeyPress ==> handleKeyPress
-        ),
-        <.button(^.onClick --> applyDiscount,
-          "Apply discount")
+          ^.placeholder := placeholderVal,
+            ^.onChange ==> handleChange,
+        ^.onKeyPress ==> handleKeyPress
+      ),
+      <.button(^.onClick --> applyDiscount,
+        "Apply discount")
       )
+    }
   }
 
   val DiscountForm = ReactComponentB[Props]("discount-form")
-    .initialState("discount code...")
+    .initialState("")
     .renderBackend[DiscountFormBackend]
     .build
 
+  // TODO message component, with internal state (if message has been closed already)
   def renderCart(p: Props) = {
+    println(p.proxy.value.state)
+    <.div(
+    p.proxy.value.renderFailed(err =>
+      <.div(^.className := "message error",
+        <.button("x"),
+        <.div(err.getMessage))),
     p.proxy.value.render(cartView => {
       if (cartView.lines.isEmpty) {
         <.p("Your cart is empty.")
@@ -182,7 +194,7 @@ object CartViewComp extends ReactEventAliases {
           DiscountForm(p),
           <.button(^.onClick --> p.dispatcher(ClearCart), "Clear Cart"))
       }
-    })
+    }))
   }
 
   val CartView = ReactComponentB[Props]("cart-view")

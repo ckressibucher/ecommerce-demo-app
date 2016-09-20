@@ -117,10 +117,11 @@ object CartService {
         case (lineTotal, ln) => lineTotal + ln.price.cents
       }
       // TODO use CartBase result instead??
-      val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
-        sumLines
-      else
-        taxTotal + sumLines
+      //val grandTotal = if (result.mode == PriceMode.PRICE_GROSS)
+      //  sumLines
+      //else
+      //  taxTotal + sumLines
+      val grandTotal = result.grandTotal()
       Right(CartView(okLines, okDiscounts, CartView.TaxResult(taxLines.toList, Price(taxTotal)), Price(grandTotal)))
     }
   }

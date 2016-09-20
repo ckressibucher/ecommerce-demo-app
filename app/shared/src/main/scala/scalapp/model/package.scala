@@ -30,8 +30,12 @@ package object model {
       List(prefix, main, dec, cs, suffix).mkString("")
     }
 
-    def divMod: (Long, Long) =
-      (cents / 100, cents % 100)
+    def divMod: (Long, Long) = (cents / 100, cents % 100)
+
+    def divModAbs: (Long, Long) = abs.divMod
+
+    private def abs: Price =
+      copy(cents = scala.math.abs(cents))
   }
 
   case class ImgPath(url: String) extends AnyVal
