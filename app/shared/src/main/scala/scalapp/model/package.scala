@@ -34,6 +34,9 @@ package object model {
 
     def divModAbs: (Long, Long) = abs.divMod
 
+    def negate: Price =
+      copy(cents = cents * (-1))
+
     private def abs: Price =
       copy(cents = scala.math.abs(cents))
   }

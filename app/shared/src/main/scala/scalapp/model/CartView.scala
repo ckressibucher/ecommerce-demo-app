@@ -21,7 +21,7 @@ object CartView {
 
   case class Line(p: Product, qty: Int, price: Price, taxClass: String)
 
-  case class Discount(code: String, amount: Price, taxClass: String)
+  case class Discount(code: String, amount: Price, taxClasses: immutable.Seq[String])
 
   case class TaxLine(cls: String, rate: Double, totalSum: Price, taxAmount: Price)
 

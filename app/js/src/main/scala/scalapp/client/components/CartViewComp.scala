@@ -183,9 +183,9 @@ object CartViewComp extends ReactEventAliases {
                 case (d: CartViewModel.Discount) => <.tr(
                   <.td("discount: " + d.code),
                   <.td("1"),
-                  <.td(PriceBox.PriceBox(d.amount)),
-                  <.td(d.taxClass),
-                  <.td(PriceBox.PriceBox(d.amount)),
+                  <.td(PriceBox.PriceBox(d.amount.negate)),
+                  <.td(d.taxClasses.mkString(", ")),
+                  <.td(PriceBox.PriceBox(d.amount.negate)),
                   <.td(
                     <.button(
                       ^.onClick --> p.dispatcher(RemoveDiscount(d.code)),
