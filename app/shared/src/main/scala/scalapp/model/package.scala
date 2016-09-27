@@ -17,6 +17,10 @@ package object model {
 
   case class ProductName(name: String) extends AnyVal
 
+  object PriceSignum extends Enumeration {
+    val Plus, Minus = Value
+  }
+
   /**
     * A price is an integer value of cents.
     */
@@ -26,12 +30,27 @@ package object model {
       List(prefix, main, dec, cs, suffix).mkString("")
     }
 
+    /** Get the division quotient and modulo values of divisor "100".
+      *
+      * Useful to get the "main" part and "cents" part of currencies
+      * which have this two units.
+      *
+      * @return tuple of d
+      */
     def divMod: (Long, Long) = (cents / 100, cents % 100)
 
+    /** Gets the divMod of the absolute price
+      */
     def divModAbs: (Long, Long) = abs.divMod
 
     def negate: Price =
       copy(cents = cents * (-1))
+
+    def priceTuple: (PriceSignum.Value, Long, Long) = {
+      val sig = if (cents >= 0) PriceSignum.Plus else PriceSignum.Minus
+      val (main, cts) = divModAbs
+      (sig, main, cts)
+    }
 
     private def abs: Price =
       copy(cents = scala.math.abs(cents))
