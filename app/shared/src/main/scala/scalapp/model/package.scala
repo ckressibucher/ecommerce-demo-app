@@ -4,16 +4,12 @@ package object model {
 
   case class Category(name: String) extends AnyVal
 
-  // it seems that autowire cannot create macros for
-  // enums, so we model this with a case class and two
+  // it seems that autowire's macros cannot work with enums,
+  // so we model this with a case class and two
   // concrete, globally available instances.
   case class TaxClassEnum(tc: String) extends AnyVal
   val TaxRegular = TaxClassEnum("B")
   val TaxReduced = TaxClassEnum("A")
-
-  /** `Some` error message or `None` on success.
-    */
-  type ResultStatus = Option[String]
 
   /** A product, and its quantity in the cart.
     */

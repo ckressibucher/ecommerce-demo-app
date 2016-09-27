@@ -69,9 +69,6 @@ package object jvm {
     def productByName(name: String): Option[Product] =
       dummyProducts.find(_.name.name == name)
 
-    def errProductDoesNotExist(p: String): ResultStatus =
-      Some(s"product $p does not exist")
-
     def taxClassString(tc: DefaultTaxClass)(implicit taxSystem: TaxSystem[DefaultTaxClass]): String = tc match {
       case `taxRegular` => s"B (${taxRegular.num}%)"
       case `taxReduced` => s"A (${taxReduced.num}%)"

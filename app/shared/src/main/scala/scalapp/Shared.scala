@@ -3,8 +3,6 @@ package scalapp
 import scala.concurrent.Future
 import scalapp.model.{CartView, Category, Product}
 
-case class FileData(name: String, size: Long)
-
 // User message to send from the server side to the client side, in case something went wrong
 case class ActionFailedMsg(msg: String) extends Exception(msg)
 
