@@ -1,6 +1,7 @@
 package scalapp.client
 
 import autowire._
+import diode.ActionResult.NoChange
 import diode.{Circuit, _}
 import diode.data.PotState._
 import diode.data.{Pot, PotAction, Ready}
@@ -125,7 +126,13 @@ class CategoryHandler[M](modelRW: ModelRW[M, CategoryModel]) extends ActionHandl
   // TODO read this
   /* http://ochrons.github.io/diode/advanced/PotActions.html */
   override def handle = {
-    case SelectCategory(newCat) => updated(value.copy(cur = Some(newCat)))
+    case SelectCategory(newCat) => {
+      if (value.cats.nonEmpty && value.cats.get.contains(newCat))
+        updated(value.copy(cur = Some(newCat)))
+      else {
+        NoChange
+      }
+    }
     case ResetCategory => updated(value.copy(cur = None))
     case action: UpdateCategories =>
       val updateEffect = action.effect(AjaxService[Api].categories().call())(identity _)
