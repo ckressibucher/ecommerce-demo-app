@@ -8,13 +8,15 @@ val app = crossProject.settings(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "scalatags" % "0.6.0",
     "com.lihaoyi" %%% "upickle" % "0.4.2",
+    "com.lihaoyi" %%% "utest" % "0.4.3" % "test",
     "com.lihaoyi" %%% "autowire" % "0.2.5"
   ),
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature"
-  )
+  ),
+  testFrameworks += new TestFramework("utest.runner.Framework")
 ).jsSettings(
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.8.0",
