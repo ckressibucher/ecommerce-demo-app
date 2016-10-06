@@ -2,11 +2,10 @@ package scalapp
 
 import java.math.{BigDecimal, MathContext, RoundingMode}
 
-import plus.coding.ckrecom.Product.ProductOps
 import plus.coding.ckrecom.TaxSystem.DefaultTaxClass
 import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
-import plus.coding.ckrecom.{Cart, CartBase, CartContentItem, CartItemCalculator, CartSystem, PriceMode, TaxSystem, Product => EcmProduct}
+import plus.coding.ckrecom.{Product => EcmProduct, _}
 
 import scala.collection.immutable
 import scala.collection.immutable.Seq
@@ -56,9 +55,11 @@ object CartService {
   def caluclateCart(cartData: CartData): Either[String, CartView] = {
     val system = new CartCalculation(cartData)
     system.run match {
-      case Right(c) => mapCartResultToCartView(c)
-      case Left(errs) =>
-        val msg = "The cart could not be calculated successfully. Errors: " + errs.mkString("; ")
+      case Right(successCart) =>
+        mapCartResultToCartView(successCart)
+      case Left(failedCart) =>
+        val msg = "The cart could not be calculated successfully. Errors: " +
+          failedCart.failedItems.map(_.error).mkString("")
         Left(msg)
     }
   }
@@ -67,24 +68,22 @@ object CartService {
     * @param result A validated cart (as returned by `Cart.fromItems`)
     * @return
     */
-  def collectMainLines(result: CartBase[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Line] = {
+  def collectMainLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Line] = {
     result.contents.collect {
-      // we can expect the result to only have valid prices (i.e. no errors),
-      // because the cart has been validated before...
-      // Also, main lines always have exactly one tax class
-      case CartContentItem(PriceLine(article: Product, qty), Right(prices), _) if prices.size == 1 =>
+      // main lines always have exactly one tax class
+      case SuccessItem(PriceLine(article: Product, qty), prices, true) if prices.size == 1 =>
         CartView.Line(article, qty.intValue(), Price(prices.head._2), Data.taxClassString(prices.head._1))
     }
   }
 
-  def collectDiscountLines(result: CartBase[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Discount] = {
+  def collectDiscountLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Discount] = {
     result.contents.collect {
-      case CartContentItem(FixedDiscount(code, amount), Right(prices), _) =>
+      case SuccessItem(FixedDiscount(code, amount), prices, _) =>
         CartView.Discount(code, Price(amount), prices.keys.map(Data.taxClassString).toList)
     }
   }
 
-  def mapTaxLines(result: CartBase[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.TaxLine] = {
+  def mapTaxLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.TaxLine] = {
     (result.taxes(RoundingMode.HALF_UP) map {
        case (taxClass: TaxCls, Cart.TaxClassSumAndTaxAmount(sum, taxAmnt)) =>
          val taxClsLabel = Data.taxClassString(taxClass)
@@ -94,7 +93,7 @@ object CartService {
      }).toList
   }
 
-  def mapCartResultToCartView(result: CartBase[TaxCls]): Either[String, CartView] = {
+  def mapCartResultToCartView(result: SuccessCart[TaxCls]): Either[String, CartView] = {
     implicit val productImpl = theProductImpl
     implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
     val mainLines = collectMainLines(result)
@@ -118,7 +117,6 @@ object CartService {
     * See the `CartSystem` type to see what abstract members it defines.
     */
   class CartCalculation(cartData: CartData) extends CartSystem[TaxCls, Product] {
-    cartCalc =>
 
     // for some (java) BigDecimal calculations, we need a `MathContext` available
     implicit val mc: MathContext = MathContext.DECIMAL128
