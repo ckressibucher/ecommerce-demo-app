@@ -7,9 +7,9 @@ class ApiRouter extends Actor {
   implicit val execContext = context.system.dispatcher
 
   // The cart factory is responsible to manage one cart per user session.
-  val cartFactory = context.actorOf(Props(classOf[CartFactory]))
+  private val cartFactory = context.actorOf(Props(classOf[CartFactory]))
 
-  val apiImpl = new ApiImpl(cartFactory)
+  private val apiImpl = new ApiImpl(cartFactory)
 
   def receive = {
     case Request(segments, args) =>

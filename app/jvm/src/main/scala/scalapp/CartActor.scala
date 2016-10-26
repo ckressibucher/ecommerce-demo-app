@@ -1,27 +1,26 @@
 package scalapp
 
 import akka.actor.{Actor, Props}
-import akka.pattern.ask
 import scalapp.model._
 
 object CartActor {
 
   sealed trait Msg
 
-  case class AddToCart(product: Product, qty: Int) extends Msg
+  final case class AddToCart(product: Product, qty: Int) extends Msg
 
-  case class DeleteProduct(product: Product) extends Msg
+  final case class DeleteProduct(product: Product) extends Msg
 
-  case object ClearCart extends Msg
+  final case object ClearCart extends Msg
 
-  case object GetCartView extends Msg
+  final case object GetCartView extends Msg
 
-  case class ApplyDiscount(code: String) extends Msg
+  final case class ApplyDiscount(code: String) extends Msg
 
-  case class RemoveDiscount(code: String) extends Msg
+  final case class RemoveDiscount(code: String) extends Msg
 
   // the result type of cart update actions (a message returned to the sender)
-  case class CartUpdateResult(either: Either[String, CartView])
+  final case class CartUpdateResult(either: Either[String, CartView])
 
   def props = Props(new CartActor(CartData.empty))
 }

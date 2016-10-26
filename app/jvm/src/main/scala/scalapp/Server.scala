@@ -49,20 +49,6 @@ object Server {
             complete(x)
           }
         }
-        //        extract { r => r.request.entity.toStrict(3.seconds) } { e: Future[Strict] =>
-        //          e.flatMap { es =>
-        //            val body = es.data.decodeString("UTF-8")
-        //            val args = upick.read[Map[String, String]](body)
-        //            (apiRouter ? ApiRouter.Request(s, args)).map(_.asInstanceOf[String])
-        //          }
-        //        }
-        //        val responseFuture = extract(_.request.entity.toStrict(3.seconds)).flatMap { e: Strict =>
-        //          val args = upick.read[Map[String, String]](e.data.decodeString("UTF-8"))
-        //          (apiRouter ? ApiRouter.Request(s, args))
-        //          onComplete(responseFuture) { r =>
-        //            complete(r.asInstanceOf[String])
-        //          }
-        //        }
       }
     }
 

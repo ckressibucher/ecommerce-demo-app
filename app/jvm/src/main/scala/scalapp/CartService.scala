@@ -7,17 +7,17 @@ import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
 import plus.coding.ckrecom.{Product => EcmProduct, _}
 
+import scala.{Product => _}
 import scala.util.Try
+
 import scalapp.jvm.Data
 import scalapp.model._
+
 
 /** Used to calculate a given cart ([[CartData]]) and return the result
   * as [[CartView]]
   */
 object CartService {
-
-  // shadow scala.Product
-  import scalapp.model.Product
 
   // We use the `DefaultTaxClass` and `DefaultTaxSystem` here.
   type TaxCls = TaxSystem.DefaultTaxClass
@@ -33,9 +33,10 @@ object CartService {
   // we use `Long`s in our `Article`s to define prices
   type Cents = Long
 
-  val theTaxSystem = TaxSystem.DefaultTaxSystem
+  private val theTaxSystem = TaxSystem.DefaultTaxSystem
 
-  val theProductImpl = new EcmProduct[TaxCls, Product] {
+  /** Implementation of [[plus.coding.ckrecom.Product]] for our [[Product]] and `TaxCls` type */
+  private val theProductImpl = new EcmProduct[TaxCls, Product] {
     def netPrice(product: Product, qty: BigDecimal): Option[BigDecimal] = {
       implicit val mc = MathContext.DECIMAL128
       val taxRate = theTaxSystem.rate(taxClass(product))
@@ -66,7 +67,7 @@ object CartService {
     * @param result A validated cart (as returned by `Cart.fromItems`)
     * @return
     */
-  def collectMainLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Line] = {
+  private def collectMainLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Line] = {
     result.contents.collect {
       // main lines always have exactly one tax class
       case SuccessItem(PriceLine(article: Product, qty), prices, true) if prices.size == 1 =>
@@ -74,14 +75,14 @@ object CartService {
     }
   }
 
-  def collectDiscountLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Discount] = {
+  private def collectDiscountLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.Discount] = {
     result.contents.collect {
       case SuccessItem(FixedDiscount(code, amount), prices, _) =>
         CartView.Discount(code, Price(amount), prices.keys.map(Data.taxClassString).toList)
     }
   }
 
-  def mapTaxLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.TaxLine] = {
+  private def mapTaxLines(result: SuccessCart[TaxCls])(implicit ts: TaxSystem[TaxCls]): Seq[CartView.TaxLine] = {
     (result.taxes(RoundingMode.HALF_UP) map {
        case (taxClass: TaxCls, Cart.TaxClassSumAndTaxAmount(sum, taxAmnt)) =>
          val taxClsLabel = Data.taxClassString(taxClass)
@@ -91,7 +92,7 @@ object CartService {
      }).toList
   }
 
-  def mapCartResultToCartView(result: SuccessCart[TaxCls]): Either[String, CartView] = {
+  private def mapCartResultToCartView(result: SuccessCart[TaxCls]): Either[String, CartView] = {
     implicit val productImpl = theProductImpl
     implicit val ts = theTaxSystem // used to convert tax class to a string (via `TaxRate`)
     val mainLines = collectMainLines(result)
@@ -106,10 +107,7 @@ object CartService {
       Price(grandTotal)))
   }
 
-
-  case class Article(product: Product, price: Cents)(implicit taxSystem: TaxSystem[TaxCls])
-
-  /** By implementing a `CartSystem`, we define all properties needed by
+  /** By implementing a [[CartSystem]], we define all properties needed by
     * the library to do its calculations.
     *
     * See the `CartSystem` type to see what abstract members it defines.
