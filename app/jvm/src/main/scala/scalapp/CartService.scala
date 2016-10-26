@@ -7,8 +7,6 @@ import plus.coding.ckrecom.impl.FixedDiscountCalc
 import plus.coding.ckrecom.impl.Priceable.{FixedDiscount, Line => PriceLine}
 import plus.coding.ckrecom.{Product => EcmProduct, _}
 
-import scala.collection.immutable
-import scala.collection.immutable.Seq
 import scala.util.Try
 import scalapp.jvm.Data
 import scalapp.model._
@@ -141,7 +139,7 @@ object CartService {
 
     // This method is used to add any adjustment items, such as discounts or fees.
     // They are appended to the items generated from the result of `buildCartLines`.
-    override def buildAdjustmentItems: immutable.Seq[CalcItem] = {
+    override def buildAdjustmentItems: Seq[CalcItem] = {
       val discs = cartData.discounts flatMap { discCode =>
         if (discCode.startsWith("demo-")) {
           val amount = Try {

@@ -1,9 +1,7 @@
 package scalapp.model
 
-import scala.collection.immutable
-
-case class CartView(lines: immutable.Seq[CartView.Line],
-                    discounts: immutable.Seq[CartView.Discount],
+case class CartView(lines: Seq[CartView.Line],
+                    discounts: Seq[CartView.Discount],
                     taxes: CartView.TaxResult,
                     grandTotal: Price) {
 
@@ -14,17 +12,17 @@ case class CartView(lines: immutable.Seq[CartView.Line],
   }}
 }
 
-/** Representation of a cart result. Mapped from [[plus.coding.ckrecom.CartBase]], but
+/** Representation of a cart result. Mapped from [[plus.coding.ckrecom.CartResult]], but
   * with some simplifications...
   */
 object CartView {
 
   case class Line(p: Product, qty: Int, price: Price, taxClass: String)
 
-  case class Discount(code: String, amount: Price, taxClasses: immutable.Seq[String])
+  case class Discount(code: String, amount: Price, taxClasses: Seq[String])
 
   case class TaxLine(cls: String, rate: Double, totalSum: Price, taxAmount: Price)
 
-  case class TaxResult(lines: immutable.Seq[TaxLine], total: Price)
+  case class TaxResult(lines: Seq[TaxLine], total: Price)
 
 }
