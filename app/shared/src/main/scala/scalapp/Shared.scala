@@ -22,15 +22,15 @@ trait Api {
 
   /** Returns `Some` error message in case of failure, `None` in case of success.
     */
-  def addToCart(sessId: String, productName: String, qty: Int): Future[UpdateResult]
+  def addToCart(productName: String, qty: Int): Future[UpdateResult]
 
-  def deleteFromCart(sessId: String, productName: String): Future[UpdateResult]
+  def deleteFromCart(productName: String): Future[UpdateResult]
 
-  def clearCart(sessId: String): Future[UpdateResult]
+  def clearCart(): Future[UpdateResult]
 
-  def applyDiscount(sessId: String, code: String): Future[UpdateResult]
+  def applyDiscount(code: String): Future[UpdateResult]
 
-  def removeDiscount(sessId: String, code: String): Future[UpdateResult]
+  def removeDiscount(code: String): Future[UpdateResult]
 
-  def showCart(sessId: String): Future[UpdateResult]
+  def showCart(): Future[UpdateResult]
 }

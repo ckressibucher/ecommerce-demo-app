@@ -12,7 +12,8 @@ import scalapp.CartActor.CartUpdateResult
 import scalapp.CartFactory.CartFacadeAction
 import scalapp.model._
 
-class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) extends Api {
+class ApiImpl(private val cartFactory: ActorRef, private val sessId: String)
+             (implicit val exCxt: ExecutionContext) extends Api {
 
   import scalapp.jvm.Data._
 
@@ -31,7 +32,7 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
     case None => successful(dummyProducts)
   }
 
-  def addToCart(sessId: String, productName: String, qty: Int): Future[UpdateResult] =
+  def addToCart(productName: String, qty: Int): Future[UpdateResult] =
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.AddToCart(p, qty))
@@ -39,7 +40,7 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
-  def deleteFromCart(sessId: String, productName: String): Future[UpdateResult] =
+  def deleteFromCart(productName: String): Future[UpdateResult] =
     productByName(productName) match {
       case Some(p: Product) =>
         cartFactory ! CartFacadeAction(sessId, CartActor.DeleteProduct(p))
@@ -47,17 +48,22 @@ class ApiImpl(cartFactory: ActorRef)(implicit val exCxt: ExecutionContext) exten
       case None => Future.failed(new RuntimeException(s"product $productName does not exist"))
     }
 
-  def clearCart(sessId: String): Future[UpdateResult] = {
-    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.ClearCart))
+  def clearCart(): Future[UpdateResult] = {
+    cartFactory ! CartFacadeAction(sessId, CartActor.ClearCart)
+    getCartView(sessId)
   }
 
-  def applyDiscount(sessId: String, code: String): Future[UpdateResult] =
-    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.ApplyDiscount(code)))
+  def applyDiscount(code: String): Future[UpdateResult] = {
+    cartFactory ! CartFacadeAction(sessId, CartActor.ApplyDiscount(code))
+    getCartView(sessId)
+  }
 
-  def removeDiscount(sessId: String, code: String): Future[UpdateResult] =
-    mapToCartView(cartFactory ? CartFacadeAction(sessId, CartActor.RemoveDiscount(code)))
+  def removeDiscount(code: String): Future[UpdateResult] = {
+    cartFactory ! CartFacadeAction(sessId, CartActor.RemoveDiscount(code))
+    getCartView(sessId)
+  }
 
-  def showCart(sessId: String): Future[UpdateResult] =
+  def showCart(): Future[UpdateResult] =
     getCartView(sessId)
 
   private def getCartView(sessId: String) =

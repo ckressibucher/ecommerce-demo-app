@@ -34,6 +34,7 @@ val app = crossProject.settings(
   libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.4.9",
     "com.typesafe.akka" %% "akka-http-experimental" % "2.4.9",
+    "com.softwaremill.akka-http-session" %% "core" % "0.2.7",
     "plus.coding" %% "ckrecom" % "1.0-SNAPSHOT"
   )
 )

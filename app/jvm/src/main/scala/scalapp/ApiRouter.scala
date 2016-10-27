@@ -7,14 +7,14 @@ class ApiRouter extends Actor {
   implicit val execContext = context.system.dispatcher
 
   // The cart factory is responsible to manage one cart per user session.
-  private val cartFactory = context.actorOf(Props(classOf[CartFactory]))
+  private val cartFactory = context.actorOf(Props[CartFactory], "cart-factory")
 
-  private val apiImpl = new ApiImpl(cartFactory)
 
   def receive = {
-    case Request(segments, args) =>
+    case Request(segments, args, session) =>
       // get a handle to the sender ActorRef
       val sdr = sender()
+      val apiImpl = new ApiImpl(cartFactory, session)
       val f = Router.route[Api](apiImpl) {
         autowire.Core.Request(segments, args)
       }
@@ -30,5 +30,5 @@ class ApiRouter extends Actor {
 
 object ApiRouter {
   // Message protocol
-  final case class Request(pathSegments: List[String], args: Map[String, String])
+  final case class Request(pathSegments: List[String], args: Map[String, String], session: String)
 }

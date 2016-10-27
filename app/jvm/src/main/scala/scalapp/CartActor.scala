@@ -22,7 +22,6 @@ object CartActor {
   // the result type of cart update actions (a message returned to the sender)
   final case class CartUpdateResult(either: Either[String, CartView])
 
-  def props = Props(new CartActor(CartData.empty))
 }
 
 class CartActor(var cart: CartData) extends Actor {
